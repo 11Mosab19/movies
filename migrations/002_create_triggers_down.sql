@@ -1,0 +1,1 @@
+DROP TRIGGER users_updated_at_trigger;
