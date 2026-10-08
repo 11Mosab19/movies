@@ -34,8 +34,10 @@ CREATE TABLE users (
 CREATE TABLE reviews (
     id SERIAL PRIMARY KEY,
     review TEXT ,
-    rating NUMERIC(3,1) NOT NULL,
-    user_id REFERENCES users(id) ON DELETE CASCADE
+    rating NUMERIC(3,1) NOT NULL CHECK(rating BETWEEN 0 AND 10),
+    user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    movie_id INT NOT NULL REFERENCES movies(id) ON DELETE CASCADE,
+    UNIQUE (user_id, movie_id)
 );
 
 CREATE TABLE watch_list (

@@ -7,6 +7,7 @@ import (
 )
 
 type Movie struct {
+	Id             int
 	Name           string
 	StoryLine      string
 	ProducerName   string
@@ -18,6 +19,7 @@ type Movie struct {
 }
 
 type User struct {
+	Id             int
 	FullName       string
 	HashedPassword string
 	Email          string
@@ -25,12 +27,14 @@ type User struct {
 }
 
 type Review struct {
+	Id     int
 	userID int
 	review string
 	Rating float64
 }
 
 type Stars struct {
+	Id        int
 	Name      string
 	birthDate time.Time
 	homeLand  string

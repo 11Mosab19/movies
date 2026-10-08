@@ -1,1 +1,2 @@
 DROP TRIGGER users_updated_at_trigger;
+DROP TRIGGER update_movie_rating_trigger;
