@@ -31,13 +31,14 @@ type Token struct {
 }
 
 type AddMovieReq struct {
-	Name         string    `name:"json" binding:"required"`
+	Title        string    `title:"json" binding:"required"`
 	StoryLine    string    `story_line:"json" binding:"required"`
 	ImdbRating   float64   `imdb_rating:"json"`
 	Status       string    `status:"json" binding:"required"`
 	ReleaseDate  time.Time `release_date:"json" binding:"required"`
 	ProducerName string    `producer_name:"json" binding:"required"`
 	Category     string    `category:"json" binding:"required"`
+	PosterUrl    string    `poster_url:"json" binding:"required,url"`
 }
 
 type AddStarReq struct {

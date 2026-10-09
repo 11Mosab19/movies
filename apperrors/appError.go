@@ -71,4 +71,9 @@ var (
 		Code:    http.StatusNotFound,
 		Message: "producer not found",
 	}
+
+	ErrMovieAlreadyExists = &AppError{
+		Code:    http.StatusConflict,
+		Message: "movie already exists",
+	}
 )

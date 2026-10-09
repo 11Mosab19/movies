@@ -8,7 +8,7 @@ import (
 
 type Movie struct {
 	Id             int
-	Name           string
+	Title          string
 	StoryLine      string
 	ProducerName   string
 	ImdbRating     float64
@@ -16,6 +16,7 @@ type Movie struct {
 	Status         string
 	ReleaseDate    time.Time
 	Category       string
+	PosterUrl      string
 }
 
 type User struct {
