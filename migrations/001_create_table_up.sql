@@ -1,4 +1,6 @@
 CREATE TYPE "roles" AS ENUM ('admin','user');
+CREATE TYPE "status" AS ENUM ('released','upcoming')
+CREATE TYPE "watch_status" AS ENUM ('watched','listed')
 
 
 CREATE TABLE movies (
@@ -9,7 +11,7 @@ CREATE TABLE movies (
     category TEXT NOT NULL,
     release_date DATE,
     poster_url TEXT NOT NULL,
-    status TEXT NOT NULL CHECK (length(btrim(status)) > 0),
+    status status NOT NULL,
     imdb_rating NUMERIC(3,1) CHECK (imdb_rating BETWEEN 0 AND 10),
     internal_rating NUMERIC(3,1) NOT NULL DEFAULT 0.0 CHECK (internal_rating BETWEEN 0 AND 10)
 );
@@ -43,6 +45,7 @@ CREATE TABLE reviews (
 CREATE TABLE watch_list (
     movie_id INT NOT NULL REFERENCES movies(id) ON DELETE CASCADE,
     user_id REFERENCES users(id) ON DELETE CASCADE,
+    watch_status watch_status DEFAULT 'listed',
     PRIMARY KEY (movie_id, user_id)
 );
 

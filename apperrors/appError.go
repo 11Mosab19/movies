@@ -76,4 +76,9 @@ var (
 		Code:    http.StatusConflict,
 		Message: "movie already exists",
 	}
+
+	ErrEmptyUpdate = &AppError{
+		Code:    http.StatusBadRequest,
+		Message: "no fields provided for update",
+	}
 )
