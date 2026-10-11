@@ -86,4 +86,9 @@ var (
 		Code:    http.StatusConflict,
 		Message: "review already exists",
 	}
+
+	ErrReviewNotFound = &AppError{
+		Code:    http.StatusNotFound,
+		Message: "review not found",
+	}
 )
