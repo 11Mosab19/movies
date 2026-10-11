@@ -150,6 +150,33 @@ func (MR *MoviesRepo) GetMoviesByProducerName(ctx context.Context, ProducerName 
 
 }
 
+func (MR *MoviesRepo) GetMoviesByCategory(ctx context.Context, Category string) ([]models.Movie, error) {
+	GetMovieQuery := `SELECT id,title,story_line,producer_name,category,release_date,poster_url,status,imdb_rating,internal_rating
+	FROM movies WHERE category ILIKE $1;`
+
+	rows, err := MR.DB.DB.QueryContext(ctx, GetMovieQuery, "%"+Category+"%")
+	if err != nil {
+		return []models.Movie{}, err
+	}
+	defer rows.Close()
+
+	movies := make([]models.Movie, 0)
+
+	for rows.Next() {
+		var Movie models.Movie
+		err := rows.Scan(&Movie.Id, &Movie.Title, &Movie.StoryLine, &Movie.ProducerName, &Movie.Category, &Movie.ReleaseDate, &Movie.PosterUrl, &Movie.Status, &Movie.ImdbRating, &Movie.InternalRating)
+		if err != nil {
+			return []models.Movie{}, err
+		}
+		movies = append(movies, Movie)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return movies, nil
+}
+
 func (MR *MoviesRepo) GetUpcomingMoviesLimited(ctx context.Context) ([]models.Movie, error) {
 	GetMoviesQuery := `SELECT id,title, story_line, producer_name,category,release_date,poster_url,status,imdb_rating,internal_rating FROM movies
     WHERE release_date > CURRENT_DATE OR status = 'upcoming'

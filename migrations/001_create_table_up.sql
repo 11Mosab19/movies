@@ -1,6 +1,6 @@
 CREATE TYPE "roles" AS ENUM ('admin','user');
-CREATE TYPE "status" AS ENUM ('released','upcoming')
-CREATE TYPE "watch_status" AS ENUM ('watched','listed')
+CREATE TYPE "status" AS ENUM ('released','upcoming');
+CREATE TYPE "watch_status" AS ENUM ('watched','listed');
 
 
 CREATE TABLE movies (
@@ -44,11 +44,12 @@ CREATE TABLE reviews (
 
 CREATE TABLE watch_list (
     movie_id INT NOT NULL REFERENCES movies(id) ON DELETE CASCADE,
-    user_id REFERENCES users(id) ON DELETE CASCADE,
+    user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     watch_status watch_status DEFAULT 'listed',
+    set_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (movie_id, user_id)
 );
-
 
 CREATE TABLE movie_stars (
     movie_id INT NOT NULL REFERENCES movies(id) ON DELETE CASCADE,
@@ -61,3 +62,4 @@ CREATE INDEX stars_name_idx ON stars(name);
 CREATE INDEX users_email_idx ON users(email);
 CREATE INDEX movies_title_idx ON movies(title);
 CREATE INDEX movies_imdb_rating_idx ON movies(imdb_rating);
+CREATE INDEX watch_list_user_id_idx ON watch_list(user_id);

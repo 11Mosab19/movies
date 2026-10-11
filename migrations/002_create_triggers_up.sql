@@ -36,3 +36,20 @@ AFTER INSERT OR UPDATE OR DELETE
 ON reviews
 FOR EACH ROW
 EXECUTE FUNCTION update_movie_internal_rating();
+--
+
+CREATE OR REPLACE FUNCTION update_watch_list_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF NEW.watch_status IS DISTINCT FROM OLD.watch_status THEN
+        NEW.updated_at = CURRENT_TIMESTAMP;
+    END IF;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_watch_list_updated_at
+BEFORE UPDATE ON watch_list
+FOR EACH ROW
+EXECUTE FUNCTION update_watch_list_updated_at();

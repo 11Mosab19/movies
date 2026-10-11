@@ -3,6 +3,7 @@ DROP INDEX IF EXISTS movies_producer_name_idx;
 DROP INDEX IF EXISTS users_email_idx;
 DROP INDEX IF EXISTS movies_title_idx;
 DROP INDEX IF EXISTS movies_imdb_rating_idx;
+DROP INDEX IF EXISTS watch_list_user_id_idx;
 
 
 DROP TABLE IF EXISTS movie_stars;
