@@ -28,15 +28,17 @@ type User struct {
 }
 
 type Review struct {
-	Id     int
-	userID int
-	review string
-	Rating float64
+	Id      int
+	UserID  int
+	Review  string
+	Rating  float64
+	MovieId int
 }
 
-type Stars struct {
+type Actor struct {
 	Id        int
 	Name      string
+	Role      string
 	birthDate time.Time
 	homeLand  string
 }
@@ -45,4 +47,16 @@ type Claims struct {
 	UserId int
 	Role   string
 	jwt.RegisteredClaims
+}
+
+type ReviewWithMovie struct {
+	Review    string
+	Rating    float64
+	Title     string
+	PosterUrl string
+}
+
+type MovieWithActors struct {
+	Movie  Movie
+	Actors []Actor
 }

@@ -81,4 +81,9 @@ var (
 		Code:    http.StatusBadRequest,
 		Message: "no fields provided for update",
 	}
+
+	ErrReviewAlreadyExists = &AppError{
+		Code:    http.StatusConflict,
+		Message: "review already exists",
+	}
 )

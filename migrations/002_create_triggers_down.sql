@@ -1,3 +1,4 @@
 DROP TRIGGER users_updated_at_trigger;
 DROP TRIGGER update_movie_rating_trigger;
 DROP TRIGGER trg_watch_list_updated_at;
+DROP TRIGGER reviews_update_at_trigger;

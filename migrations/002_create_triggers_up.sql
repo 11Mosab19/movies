@@ -36,7 +36,8 @@ AFTER INSERT OR UPDATE OR DELETE
 ON reviews
 FOR EACH ROW
 EXECUTE FUNCTION update_movie_internal_rating();
---
+
+---
 
 CREATE OR REPLACE FUNCTION update_watch_list_updated_at()
 RETURNS TRIGGER AS $$
@@ -53,3 +54,18 @@ CREATE TRIGGER trg_watch_list_updated_at
 BEFORE UPDATE ON watch_list
 FOR EACH ROW
 EXECUTE FUNCTION update_watch_list_updated_at();
+
+---
+
+CREATE OR REPLACE FUNCTION update_reviews_updated_at()
+RETURN TRIGGER AS $$
+BEGIN
+    NEW.update_at CURRENT_TIMESTAMP;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER reviews_update_at_trigger
+BEFORE UPDATE ON reviews
+FOR EACH ROW
+EXECUTE FUNCTION update_reviews_update_at();

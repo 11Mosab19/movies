@@ -1,6 +1,7 @@
 CREATE TYPE "roles" AS ENUM ('admin','user');
 CREATE TYPE "status" AS ENUM ('released','upcoming');
 CREATE TYPE "watch_status" AS ENUM ('watched','listed');
+CREATE TYPE "actor_role" AS ENUM ('star',)
 
 
 CREATE TABLE movies (
@@ -16,8 +17,9 @@ CREATE TABLE movies (
     internal_rating NUMERIC(3,1) NOT NULL DEFAULT 0.0 CHECK (internal_rating BETWEEN 0 AND 10)
 );
 
-CREATE TABLE stars (
+CREATE TABLE actors (
     id SERIAL PRIMARY KEY,
+    role actor_role NOT NULL,
     name TEXT NOT NULL,
     home_land TEXT NOT NULL,
     date_of_birth DATE NOT NULL
@@ -38,7 +40,9 @@ CREATE TABLE reviews (
     review TEXT ,
     rating NUMERIC(3,1) NOT NULL CHECK(rating BETWEEN 0 AND 10),
     user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     movie_id INT NOT NULL REFERENCES movies(id) ON DELETE CASCADE,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     UNIQUE (user_id, movie_id)
 );
 
@@ -51,14 +55,14 @@ CREATE TABLE watch_list (
     PRIMARY KEY (movie_id, user_id)
 );
 
-CREATE TABLE movie_stars (
+CREATE TABLE movie_actors (
     movie_id INT NOT NULL REFERENCES movies(id) ON DELETE CASCADE,
-    star_id INT NOT NULL REFERENCES stars(id) ON DELETE CASCADE,
-    PRIMARY KEY (movie_id, star_id)
+    actor_id INT NOT NULL REFERENCES actor(id) ON DELETE CASCADE,
+    PRIMARY KEY (movie_id, actor_id)
 );
 
 CREATE INDEX movies_producer_name_idx ON movies(producer_name);
-CREATE INDEX stars_name_idx ON stars(name);
+CREATE INDEX actors_name_idx ON actors(name);
 CREATE INDEX users_email_idx ON users(email);
 CREATE INDEX movies_title_idx ON movies(title);
 CREATE INDEX movies_imdb_rating_idx ON movies(imdb_rating);

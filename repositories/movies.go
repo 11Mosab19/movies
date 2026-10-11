@@ -106,19 +106,54 @@ func (MR *MoviesRepo) GetAllMoviesByRating(ctx context.Context) ([]models.Movie,
 
 }
 
-func (MR *MoviesRepo) GetMovieById(ctx context.Context, MovieId int) (models.Movie, error) {
-	GetMovieQuery := `SELECT id,title,story_line,producer_name,category,release_date,poster_url,status,imdb_rating,internal_rating
-	FROM movies WHERE id=$1;`
+func (MR *MoviesRepo) GetMovieById(ctx context.Context, MovieId int) (models.MovieWithActors, error) {
+	GetMovieQuery := `SELECT m.id,m.title,m.story_line,m.producer_name,m.category,m.release_date,m.poster_url,m.status,m.imdb_rating,m.internal_rating,
+	a.name,a.role
+	FROM movies AS m
+	LEFT JOIN movie_stars AS ms ON ms.movie_id = m.id
+	LEFT JOIN actors AS a ON a.id = ms.star_id
+	WHERE m.id=$1;`
 
-	var Movie models.Movie
+	var Movie models.MovieWithActors
+	Movie.Actors = make([]models.Actor, 0)
 
-	err := MR.DB.DB.QueryRowContext(ctx, GetMovieQuery, MovieId).Scan(&MovieId, &Movie.Title, &Movie.StoryLine, &Movie.ProducerName, &Movie.Category, &Movie.ReleaseDate, &Movie.PosterUrl, &Movie.Status, &Movie.ImdbRating, &Movie.InternalRating)
-	if errors.Is(err, sql.ErrNoRows) {
-		return models.Movie{}, apperrors.ErrMovieNotFound
-	}
+	rows, err := MR.DB.DB.QueryContext(ctx, GetMovieQuery, MovieId)
 	if err != nil {
-		return models.Movie{}, err
+		return models.MovieWithActors{}, err
 	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var Actor models.Actor
+		var ActorName sql.NullString
+		var Role sql.NullString
+
+		err := rows.Scan(
+			&Movie.Movie.Id, &Movie.Movie.Title, &Movie.Movie.StoryLine,
+			&Movie.Movie.ProducerName, &Movie.Movie.Category,
+			&Movie.Movie.ReleaseDate, &Movie.Movie.PosterUrl,
+			&Movie.Movie.Status, &Movie.Movie.ImdbRating, &Movie.Movie.InternalRating,
+			&ActorName, &Role,
+		)
+		if err != nil {
+			return models.MovieWithActors{}, err
+		}
+
+		if ActorName.Valid {
+			Actor.Name = ActorName.String
+			Actor.Role = Role.String
+			Movie.Actors = append(Movie.Actors, Actor)
+		}
+	}
+
+	if err := rows.Err(); err != nil {
+		return models.MovieWithActors{}, err
+	}
+
+	if Movie.Movie.Id == 0 {
+		return models.MovieWithActors{}, apperrors.ErrMovieNotFound
+	}
+
 	return Movie, nil
 }
 
