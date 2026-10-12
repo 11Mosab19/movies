@@ -38,9 +38,9 @@ type Review struct {
 type Actor struct {
 	Id        int
 	Name      string
-	Role      string
-	birthDate time.Time
-	homeLand  string
+	BirthDate time.Time
+	HomeLand  string
+	Movies    []Movie
 }
 
 type Claims struct {
@@ -58,5 +58,22 @@ type ReviewWithMovie struct {
 
 type MovieWithActors struct {
 	Movie  Movie
-	Actors []Actor
+	Actors []ActorInMovie
+}
+
+type ActorInMovie struct {
+	ActorId int
+	MovieId int
+	Role    string
+}
+
+type ActorWithMovies struct {
+	Actor  Actor
+	Movies []MovieInActor
+}
+
+type MovieInActor struct {
+	MovieId int
+	Title   string
+	Role    string
 }

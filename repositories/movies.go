@@ -108,14 +108,13 @@ func (MR *MoviesRepo) GetAllMoviesByRating(ctx context.Context) ([]models.Movie,
 
 func (MR *MoviesRepo) GetMovieById(ctx context.Context, MovieId int) (models.MovieWithActors, error) {
 	GetMovieQuery := `SELECT m.id,m.title,m.story_line,m.producer_name,m.category,m.release_date,m.poster_url,m.status,m.imdb_rating,m.internal_rating,
-	a.name,a.role
+	ms.star_id,ms.movie_id,ms.role
 	FROM movies AS m
 	LEFT JOIN movie_stars AS ms ON ms.movie_id = m.id
-	LEFT JOIN actors AS a ON a.id = ms.star_id
 	WHERE m.id=$1;`
 
 	var Movie models.MovieWithActors
-	Movie.Actors = make([]models.Actor, 0)
+	Movie.Actors = make([]models.ActorInMovie, 0)
 
 	rows, err := MR.DB.DB.QueryContext(ctx, GetMovieQuery, MovieId)
 	if err != nil {
@@ -124,8 +123,9 @@ func (MR *MoviesRepo) GetMovieById(ctx context.Context, MovieId int) (models.Mov
 	defer rows.Close()
 
 	for rows.Next() {
-		var Actor models.Actor
-		var ActorName sql.NullString
+		var Actor models.ActorInMovie
+		var ActorId sql.NullInt64
+		var ActorMovieId sql.NullInt64
 		var Role sql.NullString
 
 		err := rows.Scan(
@@ -133,14 +133,15 @@ func (MR *MoviesRepo) GetMovieById(ctx context.Context, MovieId int) (models.Mov
 			&Movie.Movie.ProducerName, &Movie.Movie.Category,
 			&Movie.Movie.ReleaseDate, &Movie.Movie.PosterUrl,
 			&Movie.Movie.Status, &Movie.Movie.ImdbRating, &Movie.Movie.InternalRating,
-			&ActorName, &Role,
+			&ActorId, &ActorMovieId, &Role,
 		)
 		if err != nil {
 			return models.MovieWithActors{}, err
 		}
 
-		if ActorName.Valid {
-			Actor.Name = ActorName.String
+		if ActorId.Valid {
+			Actor.ActorId = int(ActorId.Int64)
+			Actor.MovieId = int(ActorMovieId.Int64)
 			Actor.Role = Role.String
 			Movie.Actors = append(Movie.Actors, Actor)
 		}

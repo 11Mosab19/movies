@@ -91,4 +91,14 @@ var (
 		Code:    http.StatusNotFound,
 		Message: "review not found",
 	}
+
+	ErrActorAlreadyExists = &AppError{
+		Code:    http.StatusConflict,
+		Message: "actor already exists",
+	}
+
+	ErrActorNotFound = &AppError{
+		Code:    http.StatusNotFound,
+		Message: "actor not found",
+	}
 )

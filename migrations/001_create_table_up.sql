@@ -1,7 +1,7 @@
 CREATE TYPE "roles" AS ENUM ('admin','user');
 CREATE TYPE "status" AS ENUM ('released','upcoming');
 CREATE TYPE "watch_status" AS ENUM ('watched','listed');
-CREATE TYPE "actor_role" AS ENUM ('star',)
+CREATE TYPE "actor_role" AS ENUM ('star','guest');
 
 
 CREATE TABLE movies (
@@ -19,10 +19,10 @@ CREATE TABLE movies (
 
 CREATE TABLE actors (
     id SERIAL PRIMARY KEY,
-    role actor_role NOT NULL,
     name TEXT NOT NULL,
     home_land TEXT NOT NULL,
-    date_of_birth DATE NOT NULL
+    date_of_birth DATE NOT NULL,
+    UNIQUE (name, home_land,date_of_birth)
 );
 
 CREATE TABLE users (
@@ -57,7 +57,8 @@ CREATE TABLE watch_list (
 
 CREATE TABLE movie_actors (
     movie_id INT NOT NULL REFERENCES movies(id) ON DELETE CASCADE,
-    actor_id INT NOT NULL REFERENCES actor(id) ON DELETE CASCADE,
+    actor_id INT NOT NULL REFERENCES actors(id) ON DELETE CASCADE,
+    role actor_role NOT NULL,
     PRIMARY KEY (movie_id, actor_id)
 );
 
