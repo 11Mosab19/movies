@@ -2,11 +2,11 @@ package dto
 
 import "time"
 
-type CreateUserReq struct {
+type RegisterUserReq struct {
 	Email                string `email:"json" binding:"required,email"`
 	Password             string `password:"json" binding:"required,min=8"`
 	ConfirmationPassword string `json:"confirmation_password" binding:"required,eqfield=Password"`
-	fullName             string `full_name:"json" binding:"required"`
+	FullName             string `full_name:"json" binding:"required"`
 }
 
 type LoginRequest struct {

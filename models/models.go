@@ -77,3 +77,9 @@ type MovieInActor struct {
 	Title   string
 	Role    string
 }
+
+type UpdateUserSData struct {
+	NewHashedPassword string
+	FullName          string
+	Email             string
+}
