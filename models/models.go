@@ -11,10 +11,10 @@ type Movie struct {
 	Title          string
 	StoryLine      string
 	ProducerName   string
-	ImdbRating     float64
+	ImdbRating     *float64
 	InternalRating float64
 	Status         string
-	ReleaseDate    time.Time
+	ReleaseDate    *time.Time
 	Category       string
 	PosterUrl      string
 }
@@ -22,7 +22,7 @@ type Movie struct {
 type User struct {
 	Id             int
 	FullName       string
-	HashedPassword string
+	HashedPassword string `json:"-"`
 	Email          string
 	Role           string
 }
@@ -33,6 +33,11 @@ type Review struct {
 	Review  string
 	Rating  float64
 	MovieId int
+}
+
+type UpdateReviewData struct {
+	Review *string
+	Rating *float64
 }
 
 type Actor struct {
@@ -82,4 +87,12 @@ type UpdateUserSData struct {
 	NewHashedPassword string
 	FullName          string
 	Email             string
+}
+
+type RefreshToken struct {
+	Id          int
+	UserID      int
+	ExpiresAt   time.Time
+	created_at  time.Time
+	HashedToken string
 }

@@ -17,9 +17,13 @@ type MoviesRepo struct {
 }
 
 func (MR *MoviesRepo) AddMovie(ctx context.Context, Movie models.Movie) error {
-	AddMovieQuery := `INSERT  INTO movies (title,story_line,producer_name,category,release_date,status,imdb_rating,internal_rating)
-	VALUES ($1,$2,$3,$4,$5,$6,$7,$8);`
-	_, err := MR.DB.DB.ExecContext(ctx, AddMovieQuery, Movie.Title, Movie.StoryLine, Movie.ProducerName, Movie.Category, Movie.ReleaseDate, Movie.Status, Movie.ImdbRating, Movie.InternalRating)
+	if !isValidMovieStatus(Movie.Status) {
+		return apperrors.ErrInvalidStatusInput
+	}
+
+	AddMovieQuery := `INSERT INTO movies (title, story_line, producer_name, category, release_date, poster_url, status, imdb_rating)
+	VALUES ($1, $2, $3, $4, $5, $6, $7, $8);`
+	_, err := MR.DB.DB.ExecContext(ctx, AddMovieQuery, Movie.Title, Movie.StoryLine, Movie.ProducerName, Movie.Category, Movie.ReleaseDate, Movie.PosterUrl, Movie.Status, Movie.ImdbRating)
 	if err != nil {
 		var pgErr *pgconn.PgError
 		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
@@ -39,7 +43,7 @@ func (MR *MoviesRepo) DeleteMovie(ctx context.Context, MovieId int) error {
 
 	rowsAffected, err := result.RowsAffected()
 	if err != nil {
-		return nil
+		return err
 	}
 
 	if rowsAffected == 0 {
@@ -80,7 +84,7 @@ func (MR *MoviesRepo) GetMovieByTitle(ctx context.Context, MovieTitle string) ([
 
 func (MR *MoviesRepo) GetAllMoviesByRating(ctx context.Context) ([]models.Movie, error) {
 	GetMovieQuery := `SELECT id,title,story_line,producer_name,category,release_date,poster_url,status,imdb_rating,internal_rating
-	FROM movies ORDER BY imdb_rating DESC;`
+	FROM movies ORDER BY imdb_rating DESC NULLS LAST;`
 
 	rows, err := MR.DB.DB.QueryContext(ctx, GetMovieQuery)
 	if err != nil {
@@ -108,9 +112,9 @@ func (MR *MoviesRepo) GetAllMoviesByRating(ctx context.Context) ([]models.Movie,
 
 func (MR *MoviesRepo) GetMovieById(ctx context.Context, MovieId int) (models.MovieWithActors, error) {
 	GetMovieQuery := `SELECT m.id,m.title,m.story_line,m.producer_name,m.category,m.release_date,m.poster_url,m.status,m.imdb_rating,m.internal_rating,
-	ms.star_id,ms.movie_id,ms.role
+	ma.actor_id,ma.movie_id,ma.role
 	FROM movies AS m
-	LEFT JOIN movie_stars AS ms ON ms.movie_id = m.id
+	LEFT JOIN movie_actors AS ma ON ma.movie_id = m.id
 	WHERE m.id=$1;`
 
 	var Movie models.MovieWithActors
@@ -331,15 +335,14 @@ func (MR *MoviesRepo) UpdateMovie(ctx context.Context, id int, fields map[string
 	}
 
 	AllowedFields := map[string]bool{
-		"title":           true,
-		"story_line":      true,
-		"producer_name":   true,
-		"category":        true,
-		"release_date":    true,
-		"poster_url":      true,
-		"status":          true,
-		"imdb_rating":     true,
-		"internal_rating": true,
+		"title":         true,
+		"story_line":    true,
+		"producer_name": true,
+		"category":      true,
+		"release_date":  true,
+		"poster_url":    true,
+		"status":        true,
+		"imdb_rating":   true,
 	}
 
 	UpdateMovieQuery := "UPDATE movies SET "
@@ -350,6 +353,12 @@ func (MR *MoviesRepo) UpdateMovie(ctx context.Context, id int, fields map[string
 	for field, value := range fields {
 		if !AllowedFields[field] {
 			return fmt.Errorf("invalid field: %s", field)
+		}
+		if field == "status" {
+			status, ok := value.(string)
+			if !ok || !isValidMovieStatus(status) {
+				return apperrors.ErrInvalidStatusInput
+			}
 		}
 
 		if i > 1 {
@@ -379,4 +388,8 @@ func (MR *MoviesRepo) UpdateMovie(ctx context.Context, id int, fields map[string
 	}
 
 	return nil
+}
+
+func isValidMovieStatus(status string) bool {
+	return status == "released" || status == "upcoming"
 }

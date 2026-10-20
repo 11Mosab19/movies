@@ -32,12 +32,12 @@ CREATE TABLE users (
     full_name TEXT NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    role roles DEFAULT 'user'
+    role roles NOT NULL DEFAULT 'user'
 );
 
 CREATE TABLE reviews (
     id SERIAL PRIMARY KEY,
-    review TEXT ,
+    review TEXT NOT NULL,
     rating NUMERIC(3,1) NOT NULL CHECK(rating BETWEEN 0 AND 10),
     user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
@@ -49,7 +49,7 @@ CREATE TABLE reviews (
 CREATE TABLE watch_list (
     movie_id INT NOT NULL REFERENCES movies(id) ON DELETE CASCADE,
     user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    watch_status watch_status DEFAULT 'listed',
+    watch_status watch_status NOT NULL DEFAULT 'listed',
     set_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (movie_id, user_id)
@@ -60,6 +60,14 @@ CREATE TABLE movie_actors (
     actor_id INT NOT NULL REFERENCES actors(id) ON DELETE CASCADE,
     role actor_role NOT NULL,
     PRIMARY KEY (movie_id, actor_id)
+);
+
+CREATE TABLE refresh_tokens (
+    id BIGSERIAL PRIMARY KEY,
+    user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    token_hash TEXT NOT NULL UNIQUE,
+    expires_at TIMESTAMPTZ NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE INDEX movies_producer_name_idx ON movies(producer_name);

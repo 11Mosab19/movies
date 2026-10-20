@@ -1,7 +1,7 @@
 CREATE OR REPLACE FUNCTION update_at_users_update()
 RETURNS TRIGGER AS $$
 BEGIN 
-    NEW.updated_at = CURRENT_TIMESTAMP;
+    NEW.updated_at := CURRENT_TIMESTAMP;
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
@@ -10,6 +10,22 @@ CREATE TRIGGER users_update_at_trigger
 BEFORE UPDATE ON users
 FOR EACH ROW
 EXECUTE FUNCTION update_at_users_update();
+
+CREATE OR REPLACE FUNCTION revoke_refresh_tokens_on_password_change()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF NEW.hashed_password IS DISTINCT FROM OLD.hashed_password THEN
+        DELETE FROM refresh_tokens WHERE user_id = NEW.id;
+    END IF;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER users_password_changed_trigger
+BEFORE UPDATE OF hashed_password ON users
+FOR EACH ROW
+EXECUTE FUNCTION revoke_refresh_tokens_on_password_change();
 --
 CREATE OR REPLACE FUNCTION update_movie_internal_rating()
 RETURNS TRIGGER
@@ -43,7 +59,7 @@ CREATE OR REPLACE FUNCTION update_watch_list_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
     IF NEW.watch_status IS DISTINCT FROM OLD.watch_status THEN
-        NEW.updated_at = CURRENT_TIMESTAMP;
+        NEW.updated_at := CURRENT_TIMESTAMP;
     END IF;
 
     RETURN NEW;
@@ -58,9 +74,9 @@ EXECUTE FUNCTION update_watch_list_updated_at();
 ---
 
 CREATE OR REPLACE FUNCTION update_reviews_updated_at()
-RETURN TRIGGER AS $$
+RETURNS TRIGGER AS $$
 BEGIN
-    NEW.update_at CURRENT_TIMESTAMP;
+    NEW.updated_at := CURRENT_TIMESTAMP;
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
@@ -68,4 +84,4 @@ $$ LANGUAGE plpgsql;
 CREATE TRIGGER reviews_update_at_trigger
 BEFORE UPDATE ON reviews
 FOR EACH ROW
-EXECUTE FUNCTION update_reviews_update_at();
+EXECUTE FUNCTION update_reviews_updated_at();

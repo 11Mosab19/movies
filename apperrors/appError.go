@@ -27,14 +27,19 @@ var (
 		Message: "wrong user password",
 	}
 
-	HashingErr = &AppError{
+	ErrInvalidCredentials = &AppError{
+		Code:    http.StatusUnauthorized,
+		Message: "invalid email or password",
+	}
+
+	ErrHashing = &AppError{
 		Code:    http.StatusInternalServerError,
 		Message: "error while hashing",
 	}
 
 	ErrInvalidStatusInput = &AppError{
 		Code:    http.StatusBadRequest,
-		Message: "invalid update statue",
+		Message: "invalid status input",
 	}
 
 	ErrUnauthorized = &AppError{
@@ -47,7 +52,7 @@ var (
 		Message: "wrong confirmation password",
 	}
 
-	ErrNotSupportedAuthenticateMethod = &AppError{
+	ErrUnsupportedAuthenticationMethod = &AppError{
 		Code:    http.StatusUnauthorized,
 		Message: "not supported",
 	}
@@ -100,5 +105,35 @@ var (
 	ErrActorNotFound = &AppError{
 		Code:    http.StatusNotFound,
 		Message: "actor not found",
+	}
+
+	ErrGenerateRefreshToken = &AppError{
+		Code:    http.StatusInternalServerError,
+		Message: "error while generating refresh token",
+	}
+
+	ErrGenerateAccessToken = &AppError{
+		Code:    http.StatusInternalServerError,
+		Message: "error while generating access token",
+	}
+
+	ErrInvalidRefreshToken = &AppError{
+		Code:    http.StatusUnauthorized,
+		Message: "invalid refresh token",
+	}
+
+	ErrRefreshTokenExpired = &AppError{
+		Code:    http.StatusUnauthorized,
+		Message: "refresh token expired",
+	}
+
+	ErrMovieAlreadyInWatchList = &AppError{
+		Code:    http.StatusConflict,
+		Message: "movie is already in watch list",
+	}
+
+	ErrWatchListEntryNotFound = &AppError{
+		Code:    http.StatusNotFound,
+		Message: "watch list entry not found",
 	}
 )

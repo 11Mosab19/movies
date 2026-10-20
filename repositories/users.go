@@ -100,9 +100,9 @@ func (UP *UserRepo) UpdateUser(ctx context.Context, id int, UserData models.Upda
 }
 
 func (UR *UserRepo) GetUserByEmail(ctx context.Context, UserEmail string) (models.User, error) {
-	GetUserQuery := `SELECT id,role,hashed_password,full_name WHERE email=$1;`
+	GetUserQuery := `SELECT id, role, hashed_password, full_name FROM users WHERE email = $1;`
 	var UserData models.User
-	err := UR.DB.DB.QueryRowContext(ctx, GetUserQuery, UserEmail).Scan(&UserData.Id, UserData.Role, &UserData.HashedPassword, &UserData.FullName)
+	err := UR.DB.DB.QueryRowContext(ctx, GetUserQuery, UserEmail).Scan(&UserData.Id, &UserData.Role, &UserData.HashedPassword, &UserData.FullName)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return models.User{}, apperrors.ErrUserNotFound
@@ -116,10 +116,10 @@ func (UR *UserRepo) GetUserByEmail(ctx context.Context, UserEmail string) (model
 }
 
 func (UR *UserRepo) GetUserById(ctx context.Context, UserId int) (models.User, error) {
-	GetUserQuery := `SELECT email,role,hashed_password,full_name WHERE id=$1;`
+	GetUserQuery := `SELECT email, role, hashed_password, full_name FROM users WHERE id=$1;`
 
 	var UserData models.User
-	err := UR.DB.DB.QueryRowContext(ctx, GetUserQuery, UserId).Scan(&UserData.Email, UserData.Role, &UserData.HashedPassword, &UserData.FullName)
+	err := UR.DB.DB.QueryRowContext(ctx, GetUserQuery, UserId).Scan(&UserData.Email, &UserData.Role, &UserData.HashedPassword, &UserData.FullName)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return models.User{}, apperrors.ErrUserNotFound

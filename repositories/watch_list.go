@@ -20,7 +20,7 @@ func (WlR *WatchListRepo) AddMovieToWatchList(ctx context.Context, MovieId int, 
 	if err != nil {
 		var pgErr *pgconn.PgError
 		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
-			return apperrors.ErrMovieAlreadyExists
+			return apperrors.ErrMovieAlreadyInWatchList
 		}
 		return err
 	}
@@ -41,7 +41,7 @@ func (WlR *WatchListRepo) SetWatchListStatus(ctx context.Context, UserID int, Mo
 	}
 
 	if rowsAffected == 0 {
-		return apperrors.ErrMovieNotFound
+		return apperrors.ErrWatchListEntryNotFound
 	}
 
 	return nil
@@ -61,7 +61,7 @@ func (WlR *WatchListRepo) RemoveMovieFromWatchList(ctx context.Context, UserID i
 	}
 
 	if rowsAffected == 0 {
-		return apperrors.ErrMovieNotFound
+		return apperrors.ErrWatchListEntryNotFound
 	}
 
 	return nil

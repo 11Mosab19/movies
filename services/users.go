@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"errors"
 	"movies/apperrors"
 	"movies/dto"
 	"movies/models"
@@ -17,20 +18,27 @@ type UserService struct {
 func (US *UserService) Login(ctx context.Context, LoginData dto.LoginRequest) (models.User, error) {
 	User, err := US.UP.GetUserByEmail(ctx, LoginData.Email)
 	if err != nil {
+		if errors.Is(err, apperrors.ErrUserNotFound) {
+			return models.User{}, apperrors.ErrInvalidCredentials
+		}
 		return models.User{}, err
 	}
 	err = bcrypt.CompareHashAndPassword([]byte(User.HashedPassword), []byte(LoginData.Password))
 	if err != nil {
-		return models.User{}, apperrors.ErrBadRequestData
+		return models.User{}, apperrors.ErrInvalidCredentials
 	}
 	return User, err
 }
 
 func (US *UserService) RegisterUser(ctx context.Context, registerData dto.RegisterUserReq) (models.User, error) {
+	if registerData.Password != registerData.ConfirmationPassword {
+		return models.User{}, apperrors.ErrWrongConfirmationPassword
+	}
+
 	var user models.User
 	HashedPassword, err := bcrypt.GenerateFromPassword([]byte(registerData.Password), bcrypt.DefaultCost)
 	if err != nil {
-		return models.User{}, apperrors.HashingErr
+		return models.User{}, apperrors.ErrHashing
 	}
 	registerData.Password = string(HashedPassword)
 
@@ -72,7 +80,7 @@ func (US *UserService) UpdateUserData(ctx context.Context, UpdateUserData dto.Up
 		HashedPassword, err := bcrypt.GenerateFromPassword([]byte(UpdateUserData.NewPassword), bcrypt.DefaultCost)
 
 		if err != nil {
-			return models.User{}, apperrors.HashingErr
+			return models.User{}, apperrors.ErrHashing
 		}
 
 		UpdateData.NewHashedPassword = string(HashedPassword)

@@ -31,10 +31,10 @@ func (AR *ActorRepo) AddActor(ctx context.Context, Actor models.Actor) error {
 }
 
 func (AR *ActorRepo) GetActorById(ctx context.Context, ActorId int) (models.ActorWithMovies, error) {
-	GetActorQuery := `SELECT a.id,a.name,a.birth_date,a.home_land,m.id,m.title,ms.role
+	GetActorQuery := `SELECT a.id,a.name,a.date_of_birth,a.home_land,m.id,m.title,ma.role
 	FROM actors AS a
-	LEFT JOIN movie_stars AS ms ON ms.star_id = a.id
-	LEFT JOIN movies AS m ON m.id = ms.movie_id
+	LEFT JOIN movie_actors AS ma ON ma.actor_id = a.id
+	LEFT JOIN movies AS m ON m.id = ma.movie_id
 	WHERE a.id = $1;`
 
 	var Actor models.ActorWithMovies
@@ -85,10 +85,10 @@ func (AR *ActorRepo) GetActorById(ctx context.Context, ActorId int) (models.Acto
 }
 
 func (AR *ActorRepo) GetActorByName(ctx context.Context, ActorName string) ([]models.ActorWithMovies, error) {
-	GetActorQuery := `SELECT a.id,a.name,a.birth_date,a.home_land,m.id,m.title,ms.role
+	GetActorQuery := `SELECT a.id,a.name,a.date_of_birth,a.home_land,m.id,m.title,ma.role
 	FROM actors AS a
-	LEFT JOIN movie_stars AS ms ON ms.star_id = a.id
-	LEFT JOIN movies AS m ON m.id = ms.movie_id
+	LEFT JOIN movie_actors AS ma ON ma.actor_id = a.id
+	LEFT JOIN movies AS m ON m.id = ma.movie_id
 	WHERE a.name ILIKE $1
 	ORDER BY a.name;`
 
@@ -190,7 +190,7 @@ func (AR *ActorRepo) UpdateActor(ctx context.Context, ActorId int, ActorData mod
 	}
 
 	if !ActorData.BirthDate.IsZero() {
-		QueryBuilder.WriteString(fmt.Sprintf("birth_date = $%d, ", ArgID))
+		QueryBuilder.WriteString(fmt.Sprintf("date_of_birth = $%d, ", ArgID))
 		Args = append(Args, ActorData.BirthDate)
 		ArgID++
 	}

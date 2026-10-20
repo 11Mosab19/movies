@@ -33,7 +33,7 @@ func (RP *ReviewRepo) AddReview(ctx context.Context, Review models.Review) error
 func (RP *ReviewRepo) GetUserReviews(ctx context.Context, UserID int) ([]models.ReviewWithMovie, error) {
 	GetReviewsQuery := `SELECT r.review,r.rating,m.title,m.poster_url 
 	FROM movies AS m
-	JOIN review AS r ON r.movie_id = m.id
+	JOIN reviews AS r ON r.movie_id = m.id
 	WHERE r.user_id = $1
 	ORDER BY r.created_at DESC;`
 
@@ -66,7 +66,7 @@ func (RP *ReviewRepo) GetUserReviews(ctx context.Context, UserID int) ([]models.
 func (RP *ReviewRepo) GetReviewWithId(ctx context.Context, ReviewId int) (models.ReviewWithMovie, error) {
 	GetReviewQuery := `SELECT r.review,r.rating,m.title,m.poster_url 
 	FROM movies AS m
-	JOIN review AS r ON r.movie_id = m.id
+	JOIN reviews AS r ON r.movie_id = m.id
 	WHERE r.id=$1;`
 
 	var UR models.ReviewWithMovie
@@ -74,7 +74,7 @@ func (RP *ReviewRepo) GetReviewWithId(ctx context.Context, ReviewId int) (models
 	err := RP.DB.DB.QueryRowContext(ctx, GetReviewQuery, ReviewId).Scan(&UR.Review, &UR.Rating, &UR.Title, &UR.PosterUrl)
 
 	if errors.Is(err, sql.ErrNoRows) {
-		return models.ReviewWithMovie{}, apperrors.ErrMovieNotFound
+		return models.ReviewWithMovie{}, apperrors.ErrReviewNotFound
 	}
 	if err != nil {
 		return models.ReviewWithMovie{}, err
@@ -82,28 +82,31 @@ func (RP *ReviewRepo) GetReviewWithId(ctx context.Context, ReviewId int) (models
 	return UR, nil
 }
 
-func (RP *ReviewRepo) UpdateReview(ctx context.Context, UserId int, ReviewId int, ReviewData models.Review) error {
+func (RP *ReviewRepo) UpdateReview(ctx context.Context, UserId int, ReviewId int, ReviewData models.UpdateReviewData) error {
 	var QueryBuilder strings.Builder
 
-	QueryBuilder.WriteString("UPDATE review SET ")
+	QueryBuilder.WriteString("UPDATE reviews SET ")
 
 	Args := make([]any, 0)
 	ArgID := 1
 
-	if ReviewData.Review != "" {
+	if ReviewData.Review != nil {
 		QueryBuilder.WriteString(fmt.Sprintf("review = $%d, ", ArgID))
-		Args = append(Args, ReviewData.Review)
+		Args = append(Args, *ReviewData.Review)
 		ArgID++
 	}
 
-	if ReviewData.Rating > 0 {
+	if ReviewData.Rating != nil {
+		if *ReviewData.Rating < 0 || *ReviewData.Rating > 10 {
+			return apperrors.ErrBadRequestData
+		}
 		QueryBuilder.WriteString(fmt.Sprintf("rating = $%d, ", ArgID))
-		Args = append(Args, ReviewData.Rating)
+		Args = append(Args, *ReviewData.Rating)
 		ArgID++
 	}
 
 	if len(Args) == 0 {
-		return nil
+		return apperrors.ErrEmptyUpdate
 	}
 
 	Query := strings.TrimSuffix(QueryBuilder.String(), ", ")
@@ -112,9 +115,17 @@ func (RP *ReviewRepo) UpdateReview(ctx context.Context, UserId int, ReviewId int
 
 	Args = append(Args, ReviewId, UserId)
 
-	_, err := RP.DB.DB.ExecContext(ctx, Query, Args...)
+	result, err := RP.DB.DB.ExecContext(ctx, Query, Args...)
 	if err != nil {
 		return err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rowsAffected == 0 {
+		return apperrors.ErrReviewNotFound
 	}
 
 	return nil
