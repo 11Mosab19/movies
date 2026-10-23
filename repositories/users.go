@@ -34,7 +34,7 @@ func (UR *UserRepo) AddUser(ctx context.Context, User models.User) (models.User,
 	return UserData, nil
 }
 
-func (UP *UserRepo) UpdateUser(ctx context.Context, id int, UserData models.UpdateUserSData) (models.User, error) {
+func (UP *UserRepo) UpdateUser(ctx context.Context, id int, UserData models.UpdateUserData) (models.User, error) {
 	var QueryBuilder strings.Builder
 
 	QueryBuilder.WriteString("UPDATE users SET ")

@@ -60,7 +60,7 @@ func (US *UserService) UpdateUserData(ctx context.Context, UpdateUserData dto.Up
 		return models.User{}, err
 	}
 
-	var UpdateData models.UpdateUserSData
+	var UpdateData models.UpdateUserData
 
 	UpdateData.FullName = UpdateUserData.FullName
 	UpdateData.Email = UpdateUserData.Email

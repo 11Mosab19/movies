@@ -136,4 +136,9 @@ var (
 		Code:    http.StatusNotFound,
 		Message: "watch list entry not found",
 	}
+
+	ErrInvalidRatingInput = &AppError{
+		Code:    http.StatusBadRequest,
+		Message: "Invalid rating input",
+	}
 )

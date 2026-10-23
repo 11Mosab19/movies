@@ -14,9 +14,11 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
+var MySecretKey = []byte(GetConfig())
+
 type AuthService struct {
-	US repositories.UserRepo
-	AR repositories.AuthRepo
+	US *repositories.UserRepo
+	AR *repositories.AuthRepo
 }
 
 func GetConfig() string {
@@ -43,7 +45,7 @@ func (AS *AuthService) GenerateAccessToken(ctx context.Context, UserData models.
 }
 
 func (AS *AuthService) VerifyToken(TokenString string) (*models.Claims, error) {
-	MySecretKey := []byte(GetConfig())
+
 	VerifiedClaims := &models.Claims{}
 	Returned, err := jwt.ParseWithClaims(TokenString, VerifiedClaims, func(t *jwt.Token) (any, error) {
 		if t.Method.Alg() != jwt.SigningMethodHS256.Alg() {

@@ -68,6 +68,7 @@ type MovieWithActors struct {
 
 type ActorInMovie struct {
 	ActorId int
+	Name    string
 	MovieId int
 	Role    string
 }
@@ -78,12 +79,13 @@ type ActorWithMovies struct {
 }
 
 type MovieInActor struct {
-	MovieId int
-	Title   string
-	Role    string
+	MovieId       int
+	Title         string
+	Role          string
+	CharacterName string
 }
 
-type UpdateUserSData struct {
+type UpdateUserData struct {
 	NewHashedPassword string
 	FullName          string
 	Email             string
@@ -93,6 +95,6 @@ type RefreshToken struct {
 	Id          int
 	UserID      int
 	ExpiresAt   time.Time
-	created_at  time.Time
+	Created_at  time.Time
 	HashedToken string
 }

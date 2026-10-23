@@ -112,9 +112,10 @@ func (MR *MoviesRepo) GetAllMoviesByRating(ctx context.Context) ([]models.Movie,
 
 func (MR *MoviesRepo) GetMovieById(ctx context.Context, MovieId int) (models.MovieWithActors, error) {
 	GetMovieQuery := `SELECT m.id,m.title,m.story_line,m.producer_name,m.category,m.release_date,m.poster_url,m.status,m.imdb_rating,m.internal_rating,
-	ma.actor_id,ma.movie_id,ma.role
+	ma.actor_id,a.name,ma.movie_id,ma.role
 	FROM movies AS m
 	LEFT JOIN movie_actors AS ma ON ma.movie_id = m.id
+	LEFT JOIN actors AS a ON a.id = ma.actor_id
 	WHERE m.id=$1;`
 
 	var Movie models.MovieWithActors
@@ -129,6 +130,7 @@ func (MR *MoviesRepo) GetMovieById(ctx context.Context, MovieId int) (models.Mov
 	for rows.Next() {
 		var Actor models.ActorInMovie
 		var ActorId sql.NullInt64
+		var ActorName sql.NullString
 		var ActorMovieId sql.NullInt64
 		var Role sql.NullString
 
@@ -137,7 +139,7 @@ func (MR *MoviesRepo) GetMovieById(ctx context.Context, MovieId int) (models.Mov
 			&Movie.Movie.ProducerName, &Movie.Movie.Category,
 			&Movie.Movie.ReleaseDate, &Movie.Movie.PosterUrl,
 			&Movie.Movie.Status, &Movie.Movie.ImdbRating, &Movie.Movie.InternalRating,
-			&ActorId, &ActorMovieId, &Role,
+			&ActorId, &ActorName, &ActorMovieId, &Role,
 		)
 		if err != nil {
 			return models.MovieWithActors{}, err
@@ -145,6 +147,7 @@ func (MR *MoviesRepo) GetMovieById(ctx context.Context, MovieId int) (models.Mov
 
 		if ActorId.Valid {
 			Actor.ActorId = int(ActorId.Int64)
+			Actor.Name = ActorName.String
 			Actor.MovieId = int(ActorMovieId.Int64)
 			Actor.Role = Role.String
 			Movie.Actors = append(Movie.Actors, Actor)
@@ -275,7 +278,7 @@ func (MR *MoviesRepo) GetAllUpcomingMovies(ctx context.Context) ([]models.Movie,
 
 func (MR *MoviesRepo) GetTopRatedMovies(ctx context.Context) ([]models.Movie, error) {
 	GetMoviesQuery := `SELECT id,title,story_line,producer_name,category,release_date,poster_url,status,imdb_rating,internal_rating FROM movies
-	ORDER BY imdb_rating DESC LIMIT 10;`
+	ORDER BY imdb_rating DESC NULLS LAST LIMIT 10;`
 
 	rows, err := MR.DB.DB.QueryContext(ctx, GetMoviesQuery)
 	if err != nil {
