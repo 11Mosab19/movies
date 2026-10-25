@@ -67,10 +67,11 @@ type MovieWithActors struct {
 }
 
 type ActorInMovie struct {
-	ActorId int
-	Name    string
-	MovieId int
-	Role    string
+	ActorId       int
+	Name          string
+	MovieId       int
+	Role          string
+	CharacterName string
 }
 
 type ActorWithMovies struct {

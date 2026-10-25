@@ -14,8 +14,6 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-var MySecretKey = []byte(GetConfig())
-
 type AuthService struct {
 	US *repositories.UserRepo
 	AR *repositories.AuthRepo
@@ -25,6 +23,8 @@ func GetConfig() string {
 	SecretKey := os.Getenv("SECRET_KEY")
 	return SecretKey
 }
+
+var MySecretKey = []byte(GetConfig())
 
 func (AS *AuthService) GenerateAccessToken(ctx context.Context, UserData models.User) (dto.Token, error) {
 	claims := models.Claims{

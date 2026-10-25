@@ -33,7 +33,7 @@ type Token struct {
 type MovieReq struct {
 	Title        string    `json:"title" binding:"required"`
 	StoryLine    string    `json:"story_line" binding:"required"`
-	ImdbRating   float64   `json:"imdb_rating"`
+	ImdbRating   *float64  `json:"imdb_rating"`
 	Status       string    `json:"status" binding:"required"`
 	ReleaseDate  time.Time `json:"release_date" binding:"required"`
 	ProducerName string    `json:"producer_name" binding:"required"`
@@ -77,5 +77,8 @@ type MovieSummaryResponse struct {
 	InternalRating float64  `json:"internal_rating"`
 }
 
-type UpdateMovieReq struct {
+type UserRes struct {
+	Id       int    `json:"id"`
+	Role     string `json:"role"`
+	FullName string `json:"full_name"`
 }

@@ -31,7 +31,7 @@ func (AR *ActorRepo) AddActor(ctx context.Context, Actor models.Actor) error {
 }
 
 func (AR *ActorRepo) GetActorById(ctx context.Context, ActorId int) (models.ActorWithMovies, error) {
-	GetActorQuery := `SELECT a.id,a.name,a.date_of_birth,a.home_land,m.id,m.title,ma.role
+	GetActorQuery := `SELECT a.id,a.name,a.date_of_birth,a.home_land,m.id,m.title,ma.role,ma.character_name
 	FROM actors AS a
 	LEFT JOIN movie_actors AS ma ON ma.actor_id = a.id
 	LEFT JOIN movies AS m ON m.id = ma.movie_id
@@ -51,6 +51,7 @@ func (AR *ActorRepo) GetActorById(ctx context.Context, ActorId int) (models.Acto
 		var MovieId sql.NullInt64
 		var MovieTitle sql.NullString
 		var Role sql.NullString
+		var CharacterName sql.NullString
 
 		err := rows.Scan(
 			&Actor.Actor.Id,
@@ -60,6 +61,7 @@ func (AR *ActorRepo) GetActorById(ctx context.Context, ActorId int) (models.Acto
 			&MovieId,
 			&MovieTitle,
 			&Role,
+			&CharacterName,
 		)
 		if err != nil {
 			return models.ActorWithMovies{}, err
@@ -69,6 +71,7 @@ func (AR *ActorRepo) GetActorById(ctx context.Context, ActorId int) (models.Acto
 			Movie.MovieId = int(MovieId.Int64)
 			Movie.Title = MovieTitle.String
 			Movie.Role = Role.String
+			Movie.CharacterName = CharacterName.String
 			Actor.Movies = append(Actor.Movies, Movie)
 		}
 	}
@@ -85,7 +88,7 @@ func (AR *ActorRepo) GetActorById(ctx context.Context, ActorId int) (models.Acto
 }
 
 func (AR *ActorRepo) GetActorByName(ctx context.Context, ActorName string) ([]models.ActorWithMovies, error) {
-	GetActorQuery := `SELECT a.id,a.name,a.date_of_birth,a.home_land,m.id,m.title,ma.role
+	GetActorQuery := `SELECT a.id,a.name,a.date_of_birth,a.home_land,m.id,m.title,ma.role,ma.character_name
 	FROM actors AS a
 	LEFT JOIN movie_actors AS ma ON ma.actor_id = a.id
 	LEFT JOIN movies AS m ON m.id = ma.movie_id
@@ -108,6 +111,7 @@ func (AR *ActorRepo) GetActorByName(ctx context.Context, ActorName string) ([]mo
 		var MovieId sql.NullInt64
 		var MovieTitle sql.NullString
 		var Role sql.NullString
+		var CharacterName sql.NullString
 
 		err := rows.Scan(
 			&Actor.Id,
@@ -117,6 +121,7 @@ func (AR *ActorRepo) GetActorByName(ctx context.Context, ActorName string) ([]mo
 			&MovieId,
 			&MovieTitle,
 			&Role,
+			&CharacterName,
 		)
 		if err != nil {
 			return nil, err
@@ -136,6 +141,7 @@ func (AR *ActorRepo) GetActorByName(ctx context.Context, ActorName string) ([]mo
 			Movie.MovieId = int(MovieId.Int64)
 			Movie.Title = MovieTitle.String
 			Movie.Role = Role.String
+			Movie.CharacterName = CharacterName.String
 			ActorData.Movies = append(ActorData.Movies, Movie)
 		}
 	}

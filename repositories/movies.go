@@ -112,7 +112,7 @@ func (MR *MoviesRepo) GetAllMoviesByRating(ctx context.Context) ([]models.Movie,
 
 func (MR *MoviesRepo) GetMovieById(ctx context.Context, MovieId int) (models.MovieWithActors, error) {
 	GetMovieQuery := `SELECT m.id,m.title,m.story_line,m.producer_name,m.category,m.release_date,m.poster_url,m.status,m.imdb_rating,m.internal_rating,
-	ma.actor_id,a.name,ma.movie_id,ma.role
+	ma.actor_id,a.name,ma.movie_id,ma.role,ma.character_name
 	FROM movies AS m
 	LEFT JOIN movie_actors AS ma ON ma.movie_id = m.id
 	LEFT JOIN actors AS a ON a.id = ma.actor_id
@@ -133,13 +133,14 @@ func (MR *MoviesRepo) GetMovieById(ctx context.Context, MovieId int) (models.Mov
 		var ActorName sql.NullString
 		var ActorMovieId sql.NullInt64
 		var Role sql.NullString
+		var CharacterName sql.NullString
 
 		err := rows.Scan(
 			&Movie.Movie.Id, &Movie.Movie.Title, &Movie.Movie.StoryLine,
 			&Movie.Movie.ProducerName, &Movie.Movie.Category,
 			&Movie.Movie.ReleaseDate, &Movie.Movie.PosterUrl,
 			&Movie.Movie.Status, &Movie.Movie.ImdbRating, &Movie.Movie.InternalRating,
-			&ActorId, &ActorName, &ActorMovieId, &Role,
+			&ActorId, &ActorName, &ActorMovieId, &Role, &CharacterName,
 		)
 		if err != nil {
 			return models.MovieWithActors{}, err
@@ -150,6 +151,7 @@ func (MR *MoviesRepo) GetMovieById(ctx context.Context, MovieId int) (models.Mov
 			Actor.Name = ActorName.String
 			Actor.MovieId = int(ActorMovieId.Int64)
 			Actor.Role = Role.String
+			Actor.CharacterName = CharacterName.String
 			Movie.Actors = append(Movie.Actors, Actor)
 		}
 	}

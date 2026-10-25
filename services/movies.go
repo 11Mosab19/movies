@@ -13,7 +13,8 @@ type MovieService struct {
 }
 
 func (MS *MovieService) AddMovie(ctx context.Context, MovieData dto.MovieReq) error {
-	if MovieData.ImdbRating < 0 || MovieData.ImdbRating > 10 {
+
+	if *MovieData.ImdbRating < 0 || *MovieData.ImdbRating > 10 {
 		return apperrors.ErrInvalidRatingInput
 	}
 
@@ -21,7 +22,7 @@ func (MS *MovieService) AddMovie(ctx context.Context, MovieData dto.MovieReq) er
 		Title:        MovieData.Title,
 		PosterUrl:    MovieData.PosterUrl,
 		ReleaseDate:  &MovieData.ReleaseDate,
-		ImdbRating:   &MovieData.ImdbRating,
+		ImdbRating:   MovieData.ImdbRating,
 		StoryLine:    MovieData.StoryLine,
 		Status:       MovieData.Status,
 		Category:     MovieData.Category,
@@ -53,9 +54,10 @@ func (MS *MovieService) GetMovieById(ctx context.Context, movieId int) (dto.Movi
 
 	for _, actor := range MovieWithActorsData.Actors {
 		MovieData.Actors = append(MovieData.Actors, dto.ActorRes{
-			ActorId: actor.ActorId,
-			Name:    actor.Name,
-			Role:    actor.Role,
+			ActorId:       actor.ActorId,
+			Name:          actor.Name,
+			Role:          actor.Role,
+			CharacterName: actor.CharacterName,
 		})
 	}
 
