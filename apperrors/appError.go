@@ -141,4 +141,9 @@ var (
 		Code:    http.StatusBadRequest,
 		Message: "Invalid rating input",
 	}
+
+	ErrInvalidCategoryInput = &AppError{
+		Code:    http.StatusBadRequest,
+		Message: "invalid category input",
+	}
 )

@@ -57,7 +57,7 @@ type MovieDetailsResponse struct {
 	Status         string     `json:"status"`
 	ReleaseDate    *time.Time `json:"release_date"`
 	Category       string     `json:"category"`
-	PosterUrl      string     `json:"poster_url"`
+	PosterUrl      string     `json:"poster_url" binding:"url"`
 	Actors         []ActorRes `json:"actors"`
 }
 
@@ -81,4 +81,15 @@ type UserRes struct {
 	Id       int    `json:"id"`
 	Role     string `json:"role"`
 	FullName string `json:"full_name"`
+}
+
+type UpdateMovieReq struct {
+	Title        *string  `json:"title"`
+	StoryLine    *string  `json:"story_line"`
+	ProducerName *string  `json:"producer_name"`
+	Category     *string  `json:"category"`
+	ReleaseDate  *string  `json:"release_date"`
+	PosterURL    *string  `json:"poster_url"`
+	Status       *string  `json:"status"`
+	ImdbRating   *float64 `json:"imdb_rating"`
 }

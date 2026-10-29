@@ -16,6 +16,10 @@ type MoviesRepo struct {
 	DB *db.Database
 }
 
+func isValidMovieStatus(status string) bool {
+	return status == "released" || status == "upcoming"
+}
+
 func (MR *MoviesRepo) AddMovie(ctx context.Context, Movie models.Movie) error {
 	if !isValidMovieStatus(Movie.Status) {
 		return apperrors.ErrInvalidStatusInput
@@ -393,8 +397,4 @@ func (MR *MoviesRepo) UpdateMovie(ctx context.Context, id int, fields map[string
 	}
 
 	return nil
-}
-
-func isValidMovieStatus(status string) bool {
-	return status == "released" || status == "upcoming"
 }
