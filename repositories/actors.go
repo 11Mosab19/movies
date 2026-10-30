@@ -18,8 +18,8 @@ type ActorRepo struct {
 }
 
 func (AR *ActorRepo) AddActor(ctx context.Context, Actor models.Actor) error {
-	AddActorQuery := `INSERT INTO actors (name,home_land,date_of_birth) VALUES ($1,$2,$3);`
-	_, err := AR.DB.DB.ExecContext(ctx, AddActorQuery, Actor.Name, Actor.HomeLand, Actor.BirthDate)
+	AddActorQuery := `INSERT INTO actors (name,home_land,date_of_birth,image_url,image_public_id) VALUES ($1,$2,$3,$4,$5);`
+	_, err := AR.DB.DB.ExecContext(ctx, AddActorQuery, Actor.Name, Actor.HomeLand, Actor.BirthDate, Actor.ImageURL, Actor.ImagePublicID)
 	if err != nil {
 		var pgErr *pgconn.PgError
 		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
@@ -31,7 +31,7 @@ func (AR *ActorRepo) AddActor(ctx context.Context, Actor models.Actor) error {
 }
 
 func (AR *ActorRepo) GetActorById(ctx context.Context, ActorId int) (models.ActorWithMovies, error) {
-	GetActorQuery := `SELECT a.id,a.name,a.date_of_birth,a.home_land,m.id,m.title,ma.role,ma.character_name
+	GetActorQuery := `SELECT a.id,a.name,a.date_of_birth,a.home_land,COALESCE(a.image_url, ''),COALESCE(a.image_public_id, ''),m.id,m.title,ma.role,ma.character_name
 	FROM actors AS a
 	LEFT JOIN movie_actors AS ma ON ma.actor_id = a.id
 	LEFT JOIN movies AS m ON m.id = ma.movie_id
@@ -58,6 +58,8 @@ func (AR *ActorRepo) GetActorById(ctx context.Context, ActorId int) (models.Acto
 			&Actor.Actor.Name,
 			&Actor.Actor.BirthDate,
 			&Actor.Actor.HomeLand,
+			&Actor.Actor.ImageURL,
+			&Actor.Actor.ImagePublicID,
 			&MovieId,
 			&MovieTitle,
 			&Role,
@@ -88,7 +90,7 @@ func (AR *ActorRepo) GetActorById(ctx context.Context, ActorId int) (models.Acto
 }
 
 func (AR *ActorRepo) GetActorByName(ctx context.Context, ActorName string) ([]models.ActorWithMovies, error) {
-	GetActorQuery := `SELECT a.id,a.name,a.date_of_birth,a.home_land,m.id,m.title,ma.role,ma.character_name
+	GetActorQuery := `SELECT a.id,a.name,a.date_of_birth,a.home_land,COALESCE(a.image_url, ''),COALESCE(a.image_public_id, ''),m.id,m.title,ma.role,ma.character_name
 	FROM actors AS a
 	LEFT JOIN movie_actors AS ma ON ma.actor_id = a.id
 	LEFT JOIN movies AS m ON m.id = ma.movie_id
@@ -118,6 +120,8 @@ func (AR *ActorRepo) GetActorByName(ctx context.Context, ActorName string) ([]mo
 			&Actor.Name,
 			&Actor.BirthDate,
 			&Actor.HomeLand,
+			&Actor.ImageURL,
+			&Actor.ImagePublicID,
 			&MovieId,
 			&MovieTitle,
 			&Role,
@@ -204,6 +208,18 @@ func (AR *ActorRepo) UpdateActor(ctx context.Context, ActorId int, ActorData mod
 	if ActorData.HomeLand != "" {
 		QueryBuilder.WriteString(fmt.Sprintf("home_land = $%d, ", ArgID))
 		Args = append(Args, ActorData.HomeLand)
+		ArgID++
+	}
+
+	if ActorData.ImageURL != "" {
+		QueryBuilder.WriteString(fmt.Sprintf("image_url = $%d, ", ArgID))
+		Args = append(Args, ActorData.ImageURL)
+		ArgID++
+	}
+
+	if ActorData.ImagePublicID != "" {
+		QueryBuilder.WriteString(fmt.Sprintf("image_public_id = $%d, ", ArgID))
+		Args = append(Args, ActorData.ImagePublicID)
 		ArgID++
 	}
 

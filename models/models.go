@@ -17,6 +17,7 @@ type Movie struct {
 	ReleaseDate    *time.Time
 	Category       string
 	PosterUrl      string
+	PosterPublicID string
 }
 
 type User struct {
@@ -41,11 +42,13 @@ type UpdateReviewData struct {
 }
 
 type Actor struct {
-	Id        int
-	Name      string
-	BirthDate time.Time
-	HomeLand  string
-	Movies    []Movie
+	Id            int
+	Name          string
+	BirthDate     time.Time
+	HomeLand      string
+	ImageURL      string
+	ImagePublicID string
+	Movies        []Movie
 }
 
 type Claims struct {

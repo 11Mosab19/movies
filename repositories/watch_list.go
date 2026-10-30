@@ -68,7 +68,7 @@ func (WlR *WatchListRepo) RemoveMovieFromWatchList(ctx context.Context, UserID i
 }
 
 func (WlR *WatchListRepo) GetWatchListMovies(ctx context.Context, UserId int) ([]models.Movie, error) {
-	GetWatchListMoviesQuery := `SELECT m.id,m.title,m.story_line,m.producer_name,m.category,m.release_date,m.poster_url,m.status,m.imdb_rating,m.internal_rating
+	GetWatchListMoviesQuery := `SELECT m.id,m.title,m.story_line,m.producer_name,m.category,m.release_date,m.poster_url,COALESCE(m.poster_public_id, ''),m.status,m.imdb_rating,m.internal_rating
 	FROM watch_list AS wl 
 	JOIN movies AS m ON m.id = wl.movie_id
 	WHERE wl.user_id = $1
@@ -85,7 +85,7 @@ func (WlR *WatchListRepo) GetWatchListMovies(ctx context.Context, UserId int) ([
 
 	for rows.Next() {
 		var movie models.Movie
-		err := rows.Scan(&movie.Id, &movie.Title, &movie.StoryLine, &movie.ProducerName, &movie.Category, &movie.ReleaseDate, &movie.PosterUrl, &movie.Status, &movie.ImdbRating, &movie.InternalRating)
+		err := rows.Scan(&movie.Id, &movie.Title, &movie.StoryLine, &movie.ProducerName, &movie.Category, &movie.ReleaseDate, &movie.PosterUrl, &movie.PosterPublicID, &movie.Status, &movie.ImdbRating, &movie.InternalRating)
 		if err != nil {
 			return []models.Movie{}, err
 		}

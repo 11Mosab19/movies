@@ -25,9 +25,9 @@ func (MR *MoviesRepo) AddMovie(ctx context.Context, Movie models.Movie) error {
 		return apperrors.ErrInvalidStatusInput
 	}
 
-	AddMovieQuery := `INSERT INTO movies (title, story_line, producer_name, category, release_date, poster_url, status, imdb_rating)
-	VALUES ($1, $2, $3, $4, $5, $6, $7, $8);`
-	_, err := MR.DB.DB.ExecContext(ctx, AddMovieQuery, Movie.Title, Movie.StoryLine, Movie.ProducerName, Movie.Category, Movie.ReleaseDate, Movie.PosterUrl, Movie.Status, Movie.ImdbRating)
+	AddMovieQuery := `INSERT INTO movies (title, story_line, producer_name, category, release_date, poster_url, poster_public_id, status, imdb_rating)
+	VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9);`
+	_, err := MR.DB.DB.ExecContext(ctx, AddMovieQuery, Movie.Title, Movie.StoryLine, Movie.ProducerName, Movie.Category, Movie.ReleaseDate, Movie.PosterUrl, Movie.PosterPublicID, Movie.Status, Movie.ImdbRating)
 	if err != nil {
 		var pgErr *pgconn.PgError
 		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
@@ -59,7 +59,7 @@ func (MR *MoviesRepo) DeleteMovie(ctx context.Context, MovieId int) error {
 }
 
 func (MR *MoviesRepo) GetMovieByTitle(ctx context.Context, MovieTitle string) ([]models.Movie, error) {
-	GetMovieQuery := `SELECT id,title,story_line,producer_name,category,release_date,poster_url,status,imdb_rating,internal_rating
+	GetMovieQuery := `SELECT id,title,story_line,producer_name,category,release_date,poster_url,COALESCE(poster_public_id, ''),status,imdb_rating,internal_rating
 	FROM movies WHERE title ILIKE $1;`
 
 	rows, err := MR.DB.DB.QueryContext(ctx, GetMovieQuery, "%"+MovieTitle+"%")
@@ -72,7 +72,7 @@ func (MR *MoviesRepo) GetMovieByTitle(ctx context.Context, MovieTitle string) ([
 
 	for rows.Next() {
 		var Movie models.Movie
-		err := rows.Scan(&Movie.Id, &Movie.Title, &Movie.StoryLine, &Movie.ProducerName, &Movie.Category, &Movie.ReleaseDate, &Movie.PosterUrl, &Movie.Status, &Movie.ImdbRating, &Movie.InternalRating)
+		err := rows.Scan(&Movie.Id, &Movie.Title, &Movie.StoryLine, &Movie.ProducerName, &Movie.Category, &Movie.ReleaseDate, &Movie.PosterUrl, &Movie.PosterPublicID, &Movie.Status, &Movie.ImdbRating, &Movie.InternalRating)
 		if err != nil {
 			return []models.Movie{}, err
 		}
@@ -87,7 +87,7 @@ func (MR *MoviesRepo) GetMovieByTitle(ctx context.Context, MovieTitle string) ([
 }
 
 func (MR *MoviesRepo) GetAllMoviesByRating(ctx context.Context) ([]models.Movie, error) {
-	GetMovieQuery := `SELECT id,title,story_line,producer_name,category,release_date,poster_url,status,imdb_rating,internal_rating
+	GetMovieQuery := `SELECT id,title,story_line,producer_name,category,release_date,poster_url,COALESCE(poster_public_id, ''),status,imdb_rating,internal_rating
 	FROM movies ORDER BY imdb_rating DESC NULLS LAST;`
 
 	rows, err := MR.DB.DB.QueryContext(ctx, GetMovieQuery)
@@ -100,7 +100,7 @@ func (MR *MoviesRepo) GetAllMoviesByRating(ctx context.Context) ([]models.Movie,
 
 	for rows.Next() {
 		var Movie models.Movie
-		err := rows.Scan(&Movie.Id, &Movie.Title, &Movie.StoryLine, &Movie.ProducerName, &Movie.Category, &Movie.ReleaseDate, &Movie.PosterUrl, &Movie.Status, &Movie.ImdbRating, &Movie.InternalRating)
+		err := rows.Scan(&Movie.Id, &Movie.Title, &Movie.StoryLine, &Movie.ProducerName, &Movie.Category, &Movie.ReleaseDate, &Movie.PosterUrl, &Movie.PosterPublicID, &Movie.Status, &Movie.ImdbRating, &Movie.InternalRating)
 		if err != nil {
 			return []models.Movie{}, err
 		}
@@ -115,7 +115,7 @@ func (MR *MoviesRepo) GetAllMoviesByRating(ctx context.Context) ([]models.Movie,
 }
 
 func (MR *MoviesRepo) GetMovieById(ctx context.Context, MovieId int) (models.MovieWithActors, error) {
-	GetMovieQuery := `SELECT m.id,m.title,m.story_line,m.producer_name,m.category,m.release_date,m.poster_url,m.status,m.imdb_rating,m.internal_rating,
+	GetMovieQuery := `SELECT m.id,m.title,m.story_line,m.producer_name,m.category,m.release_date,m.poster_url,COALESCE(m.poster_public_id, ''),m.status,m.imdb_rating,m.internal_rating,
 	ma.actor_id,a.name,ma.movie_id,ma.role,ma.character_name
 	FROM movies AS m
 	LEFT JOIN movie_actors AS ma ON ma.movie_id = m.id
@@ -142,7 +142,7 @@ func (MR *MoviesRepo) GetMovieById(ctx context.Context, MovieId int) (models.Mov
 		err := rows.Scan(
 			&Movie.Movie.Id, &Movie.Movie.Title, &Movie.Movie.StoryLine,
 			&Movie.Movie.ProducerName, &Movie.Movie.Category,
-			&Movie.Movie.ReleaseDate, &Movie.Movie.PosterUrl,
+			&Movie.Movie.ReleaseDate, &Movie.Movie.PosterUrl, &Movie.Movie.PosterPublicID,
 			&Movie.Movie.Status, &Movie.Movie.ImdbRating, &Movie.Movie.InternalRating,
 			&ActorId, &ActorName, &ActorMovieId, &Role, &CharacterName,
 		)
@@ -172,7 +172,7 @@ func (MR *MoviesRepo) GetMovieById(ctx context.Context, MovieId int) (models.Mov
 }
 
 func (MR *MoviesRepo) GetMoviesByProducerName(ctx context.Context, ProducerName string) ([]models.Movie, error) {
-	GetMovieQuery := `SELECT id,title,story_line,producer_name,category,release_date,poster_url,status,imdb_rating,internal_rating
+	GetMovieQuery := `SELECT id,title,story_line,producer_name,category,release_date,poster_url,COALESCE(poster_public_id, ''),status,imdb_rating,internal_rating
 	FROM movies WHERE producer_name ILIKE $1;`
 
 	rows, err := MR.DB.DB.QueryContext(ctx, GetMovieQuery, "%"+ProducerName+"%")
@@ -185,7 +185,7 @@ func (MR *MoviesRepo) GetMoviesByProducerName(ctx context.Context, ProducerName 
 
 	for rows.Next() {
 		var Movie models.Movie
-		err := rows.Scan(&Movie.Id, &Movie.Title, &Movie.StoryLine, &Movie.ProducerName, &Movie.Category, &Movie.ReleaseDate, &Movie.PosterUrl, &Movie.Status, &Movie.ImdbRating, &Movie.InternalRating)
+		err := rows.Scan(&Movie.Id, &Movie.Title, &Movie.StoryLine, &Movie.ProducerName, &Movie.Category, &Movie.ReleaseDate, &Movie.PosterUrl, &Movie.PosterPublicID, &Movie.Status, &Movie.ImdbRating, &Movie.InternalRating)
 		if err != nil {
 			return []models.Movie{}, err
 		}
@@ -200,7 +200,7 @@ func (MR *MoviesRepo) GetMoviesByProducerName(ctx context.Context, ProducerName 
 }
 
 func (MR *MoviesRepo) GetMoviesByCategory(ctx context.Context, Category string) ([]models.Movie, error) {
-	GetMovieQuery := `SELECT id,title,story_line,producer_name,category,release_date,poster_url,status,imdb_rating,internal_rating
+	GetMovieQuery := `SELECT id,title,story_line,producer_name,category,release_date,poster_url,COALESCE(poster_public_id, ''),status,imdb_rating,internal_rating
 	FROM movies WHERE category ILIKE $1;`
 
 	rows, err := MR.DB.DB.QueryContext(ctx, GetMovieQuery, "%"+Category+"%")
@@ -213,7 +213,7 @@ func (MR *MoviesRepo) GetMoviesByCategory(ctx context.Context, Category string) 
 
 	for rows.Next() {
 		var Movie models.Movie
-		err := rows.Scan(&Movie.Id, &Movie.Title, &Movie.StoryLine, &Movie.ProducerName, &Movie.Category, &Movie.ReleaseDate, &Movie.PosterUrl, &Movie.Status, &Movie.ImdbRating, &Movie.InternalRating)
+		err := rows.Scan(&Movie.Id, &Movie.Title, &Movie.StoryLine, &Movie.ProducerName, &Movie.Category, &Movie.ReleaseDate, &Movie.PosterUrl, &Movie.PosterPublicID, &Movie.Status, &Movie.ImdbRating, &Movie.InternalRating)
 		if err != nil {
 			return []models.Movie{}, err
 		}
@@ -227,7 +227,7 @@ func (MR *MoviesRepo) GetMoviesByCategory(ctx context.Context, Category string) 
 }
 
 func (MR *MoviesRepo) GetUpcomingMoviesLimited(ctx context.Context) ([]models.Movie, error) {
-	GetMoviesQuery := `SELECT id,title, story_line, producer_name,category,release_date,poster_url,status,imdb_rating,internal_rating FROM movies
+	GetMoviesQuery := `SELECT id,title, story_line, producer_name,category,release_date,poster_url,COALESCE(poster_public_id, ''),status,imdb_rating,internal_rating FROM movies
     WHERE release_date > CURRENT_DATE OR status = 'upcoming'
     ORDER BY release_date ASC NULLS LAST LIMIT 10;`
 
@@ -241,7 +241,7 @@ func (MR *MoviesRepo) GetUpcomingMoviesLimited(ctx context.Context) ([]models.Mo
 
 	for rows.Next() {
 		var Movie models.Movie
-		err := rows.Scan(&Movie.Id, &Movie.Title, &Movie.StoryLine, &Movie.ProducerName, &Movie.Category, &Movie.ReleaseDate, &Movie.PosterUrl, &Movie.Status, &Movie.ImdbRating, &Movie.InternalRating)
+		err := rows.Scan(&Movie.Id, &Movie.Title, &Movie.StoryLine, &Movie.ProducerName, &Movie.Category, &Movie.ReleaseDate, &Movie.PosterUrl, &Movie.PosterPublicID, &Movie.Status, &Movie.ImdbRating, &Movie.InternalRating)
 		if err != nil {
 			return []models.Movie{}, err
 		}
@@ -255,7 +255,7 @@ func (MR *MoviesRepo) GetUpcomingMoviesLimited(ctx context.Context) ([]models.Mo
 }
 
 func (MR *MoviesRepo) GetAllUpcomingMovies(ctx context.Context) ([]models.Movie, error) {
-	GetMoviesQuery := `SELECT id,title, story_line, producer_name,category,release_date,poster_url,status,imdb_rating,internal_rating FROM movies
+	GetMoviesQuery := `SELECT id,title, story_line, producer_name,category,release_date,poster_url,COALESCE(poster_public_id, ''),status,imdb_rating,internal_rating FROM movies
     WHERE release_date > CURRENT_DATE OR status = 'upcoming'
     ORDER BY release_date ASC NULLS LAST;`
 
@@ -269,7 +269,7 @@ func (MR *MoviesRepo) GetAllUpcomingMovies(ctx context.Context) ([]models.Movie,
 
 	for rows.Next() {
 		var Movie models.Movie
-		err := rows.Scan(&Movie.Id, &Movie.Title, &Movie.StoryLine, &Movie.ProducerName, &Movie.Category, &Movie.ReleaseDate, &Movie.PosterUrl, &Movie.Status, &Movie.ImdbRating, &Movie.InternalRating)
+		err := rows.Scan(&Movie.Id, &Movie.Title, &Movie.StoryLine, &Movie.ProducerName, &Movie.Category, &Movie.ReleaseDate, &Movie.PosterUrl, &Movie.PosterPublicID, &Movie.Status, &Movie.ImdbRating, &Movie.InternalRating)
 		if err != nil {
 			return []models.Movie{}, err
 		}
@@ -283,7 +283,7 @@ func (MR *MoviesRepo) GetAllUpcomingMovies(ctx context.Context) ([]models.Movie,
 }
 
 func (MR *MoviesRepo) GetTopRatedMovies(ctx context.Context) ([]models.Movie, error) {
-	GetMoviesQuery := `SELECT id,title,story_line,producer_name,category,release_date,poster_url,status,imdb_rating,internal_rating FROM movies
+	GetMoviesQuery := `SELECT id,title,story_line,producer_name,category,release_date,poster_url,COALESCE(poster_public_id, ''),status,imdb_rating,internal_rating FROM movies
 	ORDER BY imdb_rating DESC NULLS LAST LIMIT 10;`
 
 	rows, err := MR.DB.DB.QueryContext(ctx, GetMoviesQuery)
@@ -296,7 +296,7 @@ func (MR *MoviesRepo) GetTopRatedMovies(ctx context.Context) ([]models.Movie, er
 
 	for rows.Next() {
 		var Movie models.Movie
-		err := rows.Scan(&Movie.Id, &Movie.Title, &Movie.StoryLine, &Movie.ProducerName, &Movie.Category, &Movie.ReleaseDate, &Movie.PosterUrl, &Movie.Status, &Movie.ImdbRating, &Movie.InternalRating)
+		err := rows.Scan(&Movie.Id, &Movie.Title, &Movie.StoryLine, &Movie.ProducerName, &Movie.Category, &Movie.ReleaseDate, &Movie.PosterUrl, &Movie.PosterPublicID, &Movie.Status, &Movie.ImdbRating, &Movie.InternalRating)
 		if err != nil {
 			return []models.Movie{}, err
 		}
@@ -310,7 +310,7 @@ func (MR *MoviesRepo) GetTopRatedMovies(ctx context.Context) ([]models.Movie, er
 }
 
 func (MR *MoviesRepo) GetMoviesByIds(ctx context.Context, Ids []int) ([]models.Movie, error) {
-	GetMoviesQuery := `SELECT id,title,story_line,producer_name,category,release_date,poster_url,status,imdb_rating,internal_rating FROM movies 
+	GetMoviesQuery := `SELECT id,title,story_line,producer_name,category,release_date,poster_url,COALESCE(poster_public_id, ''),status,imdb_rating,internal_rating FROM movies
 	WHERE id = ANY($1) ORDER BY array_position($1::int[], id);`
 
 	rows, err := MR.DB.DB.QueryContext(ctx, GetMoviesQuery, Ids)
@@ -323,7 +323,7 @@ func (MR *MoviesRepo) GetMoviesByIds(ctx context.Context, Ids []int) ([]models.M
 
 	for rows.Next() {
 		var Movie models.Movie
-		err := rows.Scan(&Movie.Id, &Movie.Title, &Movie.StoryLine, &Movie.ProducerName, &Movie.Category, &Movie.ReleaseDate, &Movie.PosterUrl, &Movie.Status, &Movie.ImdbRating, &Movie.InternalRating)
+		err := rows.Scan(&Movie.Id, &Movie.Title, &Movie.StoryLine, &Movie.ProducerName, &Movie.Category, &Movie.ReleaseDate, &Movie.PosterUrl, &Movie.PosterPublicID, &Movie.Status, &Movie.ImdbRating, &Movie.InternalRating)
 		if err != nil {
 			return []models.Movie{}, err
 		}
@@ -344,14 +344,15 @@ func (MR *MoviesRepo) UpdateMovie(ctx context.Context, id int, fields map[string
 	}
 
 	AllowedFields := map[string]bool{
-		"title":         true,
-		"story_line":    true,
-		"producer_name": true,
-		"category":      true,
-		"release_date":  true,
-		"poster_url":    true,
-		"status":        true,
-		"imdb_rating":   true,
+		"title":            true,
+		"story_line":       true,
+		"producer_name":    true,
+		"category":         true,
+		"release_date":     true,
+		"poster_url":       true,
+		"poster_public_id": true,
+		"status":           true,
+		"imdb_rating":      true,
 	}
 
 	UpdateMovieQuery := "UPDATE movies SET "

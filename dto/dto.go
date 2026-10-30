@@ -64,6 +64,23 @@ type MovieDetailsResponse struct {
 type ActorRes struct {
 	ActorId       int    `json:"actor_id"`
 	Name          string `json:"name"`
+	ImageURL      string `json:"image_url"`
+	Role          string `json:"role"`
+	CharacterName string `json:"character_name"`
+}
+
+type ActorDetailsResponse struct {
+	Id        int                    `json:"id"`
+	Name      string                 `json:"name"`
+	BirthDate time.Time              `json:"date_of_birth"`
+	HomeLand  string                 `json:"home_land"`
+	ImageURL  string                 `json:"image_url"`
+	Movies    []MovieInActorResponse `json:"movies"`
+}
+
+type MovieInActorResponse struct {
+	MovieId       int    `json:"movie_id"`
+	Title         string `json:"title"`
 	Role          string `json:"role"`
 	CharacterName string `json:"character_name"`
 }
@@ -92,4 +109,10 @@ type UpdateMovieReq struct {
 	PosterURL    *string  `json:"poster_url"`
 	Status       *string  `json:"status"`
 	ImdbRating   *float64 `json:"imdb_rating"`
+}
+
+type ActorSummaryResponse struct {
+	Id       int    `json:"id"`
+	Name     string `json:"name"`
+	ImageURL string `json:"image_url"`
 }

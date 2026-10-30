@@ -1,0 +1,6 @@
+ALTER TABLE movies
+ADD COLUMN IF NOT EXISTS poster_public_id TEXT;
+
+ALTER TABLE actors
+ADD COLUMN IF NOT EXISTS image_url TEXT,
+ADD COLUMN IF NOT EXISTS image_public_id TEXT;
