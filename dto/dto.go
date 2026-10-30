@@ -41,7 +41,7 @@ type MovieReq struct {
 	PosterUrl    string    `json:"poster_url" binding:"required,url"`
 }
 
-type AddStarReq struct {
+type AddActorReq struct {
 	Name        string    `json:"name" binding:"required"`
 	HomeLand    string    `json:"home_land" binding:"required"`
 	DateOfBirth time.Time `json:"date_of_birth" binding:"required"`
@@ -112,7 +112,7 @@ type UpdateMovieReq struct {
 }
 
 type ActorSummaryResponse struct {
-	Id       int    `json:"id"`
+	Id       string `json:"id"`
 	Name     string `json:"name"`
 	ImageURL string `json:"image_url"`
 }
