@@ -2,6 +2,8 @@ package services
 
 import (
 	"context"
+	"errors"
+	"io"
 	"movies/apperrors"
 	"movies/dto"
 	"movies/models"
@@ -14,6 +16,7 @@ var MovieCategories = []string{"Action", "Adventure", "Animation", "Comedy", "Cr
 
 type MovieService struct {
 	MR *repositories.MoviesRepo
+	CS *CloudinaryService
 }
 
 func (MS *MovieService) AddMovie(ctx context.Context, MovieData dto.MovieReq) error {
@@ -195,16 +198,43 @@ func (MS *MovieService) GetUpcomingMovies(ctx context.Context) ([]dto.MovieSumma
 	return MoviesToReturn, nil
 }
 
-func (MS *MovieService) UpdateMovie(ctx context.Context, movieId int, MovieUpdateData dto.UpdateMovieReq) error {
-	if *MovieUpdateData.ImdbRating > 10 || *MovieUpdateData.ImdbRating < 0 {
+func (MS *MovieService) UpdateMovie(ctx context.Context, movieId int, MovieUpdateData dto.UpdateMovieReq, image io.Reader) error {
+	if MovieUpdateData.ImdbRating != nil && (*MovieUpdateData.ImdbRating > 10 || *MovieUpdateData.ImdbRating < 0) {
 		return apperrors.ErrInvalidRatingInput
 	}
 
 	fields := util.UpdateMovieReqToMap(MovieUpdateData)
+	if image == nil {
+		return MS.MR.UpdateMovie(ctx, movieId, fields)
+	}
+	if MS.CS == nil {
+		return errors.New("Cloudinary service is not initialized")
+	}
 
-	err := MS.MR.UpdateMovie(ctx, movieId, fields)
+	existingMovie, err := MS.MR.GetMovieById(ctx, movieId)
+	if err != nil {
+		return err
+	}
+	oldPublicID := existingMovie.Movie.PosterPublicID
 
-	return err
+	newImage, err := MS.CS.UploadImage(ctx, image, "movies")
+	if err != nil {
+		return err
+	}
+
+	fields["poster_url"] = newImage.URL
+	fields["poster_public_id"] = newImage.PublicID
+	if err := MS.MR.UpdateMovie(ctx, movieId, fields); err != nil {
+		if newImage.PublicID != "" {
+			_ = MS.CS.DeleteImage(ctx, newImage.PublicID)
+		}
+		return err
+	}
+
+	if oldPublicID != "" && oldPublicID != newImage.PublicID {
+		return MS.CS.DeleteImage(ctx, oldPublicID)
+	}
+	return nil
 }
 
 func (MS *MovieService) DeleteMovie(ctx context.Context, movieId int) error {

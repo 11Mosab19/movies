@@ -71,3 +71,21 @@ func UpdateMovieReqToMap(req dto.UpdateMovieReq) map[string]interface{} {
 
 	return fields
 }
+
+func UpdateActorReqToMap(req dto.UpdateActorReq) map[string]interface{} {
+	fields := make(map[string]interface{})
+
+	if req.Name != nil {
+		fields["name"] = *req.Name
+	}
+
+	if req.HomeLand != nil {
+		fields["home_land"] = *req.HomeLand
+	}
+
+	if req.DateOfBirth != nil {
+		fields["date_of_birth"] = *req.DateOfBirth
+	}
+
+	return fields
+}

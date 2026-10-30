@@ -8,7 +8,6 @@ import (
 	"movies/apperrors"
 	"movies/database"
 	"movies/models"
-	"strings"
 
 	"github.com/jackc/pgx/v5/pgconn"
 )
@@ -185,54 +184,39 @@ func (AR *ActorRepo) DeleteActor(ctx context.Context, ActorId int) error {
 	return nil
 }
 
-func (AR *ActorRepo) UpdateActor(ctx context.Context, ActorId int, ActorData models.Actor) error {
-	var QueryBuilder strings.Builder
-
-	QueryBuilder.WriteString("UPDATE actors SET ")
-
-	Args := make([]any, 0)
-	ArgID := 1
-
-	if ActorData.Name != "" {
-		QueryBuilder.WriteString(fmt.Sprintf("name = $%d, ", ArgID))
-		Args = append(Args, ActorData.Name)
-		ArgID++
+func (AR *ActorRepo) UpdateActor(ctx context.Context, ActorId int, fields map[string]interface{}) error {
+	if len(fields) == 0 {
+		return apperrors.ErrEmptyUpdate
 	}
 
-	if !ActorData.BirthDate.IsZero() {
-		QueryBuilder.WriteString(fmt.Sprintf("date_of_birth = $%d, ", ArgID))
-		Args = append(Args, ActorData.BirthDate)
-		ArgID++
+	AllowedFields := map[string]bool{
+		"name":            true,
+		"home_land":       true,
+		"date_of_birth":   true,
+		"image_url":       true,
+		"image_public_id": true,
 	}
 
-	if ActorData.HomeLand != "" {
-		QueryBuilder.WriteString(fmt.Sprintf("home_land = $%d, ", ArgID))
-		Args = append(Args, ActorData.HomeLand)
-		ArgID++
+	UpdateActorQuery := "UPDATE actors SET "
+	args := make([]interface{}, 0, len(fields)+1)
+	i := 1
+
+	for field, value := range fields {
+		if !AllowedFields[field] {
+			return apperrors.ErrBadRequestData
+		}
+		if i > 1 {
+			UpdateActorQuery += ", "
+		}
+		UpdateActorQuery += fmt.Sprintf("%s = $%d", field, i)
+		args = append(args, value)
+		i++
 	}
 
-	if ActorData.ImageURL != "" {
-		QueryBuilder.WriteString(fmt.Sprintf("image_url = $%d, ", ArgID))
-		Args = append(Args, ActorData.ImageURL)
-		ArgID++
-	}
+	UpdateActorQuery += fmt.Sprintf(" WHERE id = $%d", i)
+	args = append(args, ActorId)
 
-	if ActorData.ImagePublicID != "" {
-		QueryBuilder.WriteString(fmt.Sprintf("image_public_id = $%d, ", ArgID))
-		Args = append(Args, ActorData.ImagePublicID)
-		ArgID++
-	}
-
-	if len(Args) == 0 {
-		return nil
-	}
-
-	Query := strings.TrimSuffix(QueryBuilder.String(), ", ")
-
-	Query += fmt.Sprintf(" WHERE id = $%d", ArgID)
-	Args = append(Args, ActorId)
-
-	Result, err := AR.DB.DB.ExecContext(ctx, Query, Args...)
+	Result, err := AR.DB.DB.ExecContext(ctx, UpdateActorQuery, args...)
 	if err != nil {
 		return err
 	}

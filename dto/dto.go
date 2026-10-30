@@ -116,3 +116,9 @@ type ActorSummaryResponse struct {
 	Name     string `json:"name"`
 	ImageURL string `json:"image_url"`
 }
+
+type UpdateActorReq struct {
+	Name        *string `json:"name"`
+	HomeLand    *string `json:"home_land"`
+	DateOfBirth *string `json:"date_of_birth"`
+}
