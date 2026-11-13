@@ -88,11 +88,9 @@ func (AR *ActorRepo) GetActorById(ctx context.Context, ActorId int) (models.Acto
 	return Actor, nil
 }
 
-func (AR *ActorRepo) GetActorByName(ctx context.Context, ActorName string) ([]models.ActorWithMovies, error) {
-	GetActorQuery := `SELECT a.id,a.name,a.date_of_birth,a.home_land,COALESCE(a.image_url, ''),COALESCE(a.image_public_id, ''),m.id,m.title,ma.role,ma.character_name
+func (AR *ActorRepo) GetActorByName(ctx context.Context, ActorName string) ([]models.ActorSummary, error) {
+	GetActorQuery := `SELECT a.id, a.name, COALESCE(a.image_url, '')
 	FROM actors AS a
-	LEFT JOIN movie_actors AS ma ON ma.actor_id = a.id
-	LEFT JOIN movies AS m ON m.id = ma.movie_id
 	WHERE a.name ILIKE $1
 	ORDER BY a.name;`
 
@@ -102,65 +100,23 @@ func (AR *ActorRepo) GetActorByName(ctx context.Context, ActorName string) ([]mo
 	}
 	defer rows.Close()
 
-	ActorsMap := make(map[int]*models.ActorWithMovies)
-	var Actors []models.ActorWithMovies
-	var ActorOrder []int
-
+	var Actors []models.ActorSummary
 	for rows.Next() {
-		var Actor models.Actor
-		var Movie models.MovieInActor
-		var MovieId sql.NullInt64
-		var MovieTitle sql.NullString
-		var Role sql.NullString
-		var CharacterName sql.NullString
-
-		err := rows.Scan(
-			&Actor.Id,
-			&Actor.Name,
-			&Actor.BirthDate,
-			&Actor.HomeLand,
-			&Actor.ImageURL,
-			&Actor.ImagePublicID,
-			&MovieId,
-			&MovieTitle,
-			&Role,
-			&CharacterName,
-		)
+		var Actor models.ActorSummary
+		err := rows.Scan(&Actor.Id, &Actor.Name, &Actor.ImageURL)
 		if err != nil {
 			return nil, err
 		}
-
-		ActorData, exists := ActorsMap[Actor.Id]
-		if !exists {
-			ActorData = &models.ActorWithMovies{
-				Actor:  Actor,
-				Movies: make([]models.MovieInActor, 0),
-			}
-			ActorsMap[Actor.Id] = ActorData
-			ActorOrder = append(ActorOrder, Actor.Id)
-		}
-
-		if MovieId.Valid {
-			Movie.MovieId = int(MovieId.Int64)
-			Movie.Title = MovieTitle.String
-			Movie.Role = Role.String
-			Movie.CharacterName = CharacterName.String
-			ActorData.Movies = append(ActorData.Movies, Movie)
-		}
+		Actors = append(Actors, Actor)
 	}
 
 	if err := rows.Err(); err != nil {
 		return nil, err
 	}
 
-	if len(ActorsMap) == 0 {
+	if len(Actors) == 0 {
 		return nil, apperrors.ErrActorNotFound
 	}
-
-	for _, Id := range ActorOrder {
-		Actors = append(Actors, *ActorsMap[Id])
-	}
-
 	return Actors, nil
 }
 

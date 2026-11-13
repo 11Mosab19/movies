@@ -146,4 +146,9 @@ var (
 		Code:    http.StatusBadRequest,
 		Message: "invalid category input",
 	}
+
+	ErrInvalidBirthDate = &AppError{
+		Code:    http.StatusBadRequest,
+		Message: "invalid birthdate data",
+	}
 )

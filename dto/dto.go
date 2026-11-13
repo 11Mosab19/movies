@@ -38,7 +38,6 @@ type MovieReq struct {
 	ReleaseDate  time.Time `json:"release_date" binding:"required"`
 	ProducerName string    `json:"producer_name" binding:"required"`
 	Category     string    `json:"category" binding:"required"`
-	PosterUrl    string    `json:"poster_url" binding:"required,url"`
 }
 
 type AddActorReq struct {
@@ -48,20 +47,20 @@ type AddActorReq struct {
 }
 
 type MovieDetailsResponse struct {
-	Id             int        `json:"id"`
-	Title          string     `json:"title"`
-	StoryLine      string     `json:"story_line"`
-	ProducerName   string     `json:"producer_name"`
-	ImdbRating     *float64   `json:"imdb_rating"`
-	InternalRating float64    `json:"internal_rating"`
-	Status         string     `json:"status"`
-	ReleaseDate    *time.Time `json:"release_date"`
-	Category       string     `json:"category"`
-	PosterUrl      string     `json:"poster_url" binding:"url"`
-	Actors         []ActorRes `json:"actors"`
+	Id             int               `json:"id"`
+	Title          string            `json:"title"`
+	StoryLine      string            `json:"story_line"`
+	ProducerName   string            `json:"producer_name"`
+	ImdbRating     *float64          `json:"imdb_rating"`
+	InternalRating float64           `json:"internal_rating"`
+	Status         string            `json:"status"`
+	ReleaseDate    *time.Time        `json:"release_date"`
+	Category       string            `json:"category"`
+	PosterUrl      string            `json:"poster_url" binding:"url"`
+	Actors         []ActorInMovieRes `json:"actors"`
 }
 
-type ActorRes struct {
+type ActorInMovieRes struct {
 	ActorId       int    `json:"actor_id"`
 	Name          string `json:"name"`
 	ImageURL      string `json:"image_url"`
@@ -112,7 +111,7 @@ type UpdateMovieReq struct {
 }
 
 type ActorSummaryResponse struct {
-	Id       string `json:"id"`
+	Id       int    `json:"id"`
 	Name     string `json:"name"`
 	ImageURL string `json:"image_url"`
 }

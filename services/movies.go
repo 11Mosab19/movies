@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"errors"
+	"fmt"
 	"io"
 	"movies/apperrors"
 	"movies/dto"
@@ -19,7 +20,7 @@ type MovieService struct {
 	CS *CloudinaryService
 }
 
-func (MS *MovieService) AddMovie(ctx context.Context, MovieData dto.MovieReq) error {
+func (MS *MovieService) AddMovie(ctx context.Context, MovieData dto.MovieReq, image io.Reader) error {
 
 	if !slices.Contains(MovieCategories, MovieData.Category) {
 		return apperrors.ErrInvalidCategoryInput
@@ -29,20 +30,38 @@ func (MS *MovieService) AddMovie(ctx context.Context, MovieData dto.MovieReq) er
 		return apperrors.ErrInvalidRatingInput
 	}
 
-	Movie := models.Movie{
-		Title:        MovieData.Title,
-		PosterUrl:    MovieData.PosterUrl,
-		ReleaseDate:  &MovieData.ReleaseDate,
-		ImdbRating:   MovieData.ImdbRating,
-		StoryLine:    MovieData.StoryLine,
-		Status:       MovieData.Status,
-		Category:     MovieData.Category,
-		ProducerName: MovieData.ProducerName,
+	uploadedImage, err := MS.CS.UploadImage(ctx, image, "Movies")
+
+	if err != nil {
+		return fmt.Errorf("upload movie poster: %w", err)
 	}
 
-	err := MS.MR.AddMovie(ctx, Movie)
+	PosterUrl := uploadedImage.URL
+	PosterPublicID := uploadedImage.PublicID
 
-	return err
+	Movie := models.Movie{
+		Title:          MovieData.Title,
+		PosterUrl:      PosterUrl,
+		PosterPublicID: PosterPublicID,
+		ReleaseDate:    &MovieData.ReleaseDate,
+		ImdbRating:     MovieData.ImdbRating,
+		StoryLine:      MovieData.StoryLine,
+		Status:         MovieData.Status,
+		Category:       MovieData.Category,
+		ProducerName:   MovieData.ProducerName,
+	}
+
+	err = MS.MR.AddMovie(ctx, Movie)
+
+	if err != nil {
+		DeleteErr := MS.CS.DeleteImage(ctx, PosterPublicID)
+		if DeleteErr != nil {
+			return fmt.Errorf(
+				"create movie: %w; cleanup image: %v", err, DeleteErr)
+		}
+	}
+
+	return nil
 }
 
 func (MS *MovieService) GetMovieById(ctx context.Context, movieId int) (dto.MovieDetailsResponse, error) {
@@ -61,10 +80,10 @@ func (MS *MovieService) GetMovieById(ctx context.Context, movieId int) (dto.Movi
 	MovieData.InternalRating = MovieWithActorsData.Movie.InternalRating
 	MovieData.ReleaseDate = MovieWithActorsData.Movie.ReleaseDate
 	MovieData.Status = MovieWithActorsData.Movie.Status
-	MovieData.Actors = make([]dto.ActorRes, 0, len(MovieWithActorsData.Actors))
+	MovieData.Actors = make([]dto.ActorInMovieRes, 0, len(MovieWithActorsData.Actors))
 
 	for _, actor := range MovieWithActorsData.Actors {
-		MovieData.Actors = append(MovieData.Actors, dto.ActorRes{
+		MovieData.Actors = append(MovieData.Actors, dto.ActorInMovieRes{
 			ActorId:       actor.ActorId,
 			Name:          actor.Name,
 			Role:          actor.Role,

@@ -51,6 +51,12 @@ type Actor struct {
 	Movies        []Movie
 }
 
+type ActorSummary struct {
+	Id       int
+	Name     string
+	ImageURL string
+}
+
 type Claims struct {
 	UserId int
 	Role   string

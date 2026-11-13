@@ -1,6 +1,7 @@
 package services
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -21,6 +22,8 @@ type UploadedImage struct {
 	URL      string
 	PublicID string
 }
+
+const maxImageSize = 5 << 20
 
 func NewCloudinaryService() (*CloudinaryService, error) {
 	if err := godotenv.Load(); err != nil && !errors.Is(err, os.ErrNotExist) {
@@ -51,7 +54,18 @@ func (CS *CloudinaryService) UploadImage(
 		return UploadedImage{}, errors.New("image content is required")
 	}
 
-	result, err := CS.Client.Upload.Upload(ctx, image, uploader.UploadParams{
+	data, err := io.ReadAll(io.LimitReader(image, maxImageSize+1))
+	if err != nil {
+		return UploadedImage{}, fmt.Errorf("read image content: %w", err)
+	}
+	if len(data) == 0 {
+		return UploadedImage{}, errors.New("image content is empty")
+	}
+	if len(data) > maxImageSize {
+		return UploadedImage{}, fmt.Errorf("image exceeds maximum size of %d bytes", maxImageSize)
+	}
+
+	result, err := CS.Client.Upload.Upload(ctx, bytes.NewReader(data), uploader.UploadParams{
 		Folder: folder,
 	})
 	if err != nil {
@@ -77,7 +91,7 @@ func (CS *CloudinaryService) DeleteImage(ctx context.Context, publicID string) e
 		return fmt.Errorf("delete image from Cloudinary: %w", err)
 	}
 
-	if result.Result != "ok" {
+	if result.Result != "ok" && result.Result != "not found" {
 		return fmt.Errorf(
 			"delete image from Cloudinary: unexpected result %q",
 			result.Result,
