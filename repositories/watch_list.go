@@ -67,34 +67,34 @@ func (WlR *WatchListRepo) RemoveMovieFromWatchList(ctx context.Context, UserID i
 	return nil
 }
 
-func (WlR *WatchListRepo) GetWatchListMovies(ctx context.Context, UserId int) ([]models.Movie, error) {
-	GetWatchListMoviesQuery := `SELECT m.id,m.title,m.story_line,m.producer_name,m.category,m.release_date,m.poster_url,COALESCE(m.poster_public_id, ''),m.status,m.imdb_rating,m.internal_rating
+func (WlR *WatchListRepo) GetWatchListMovies(ctx context.Context, UserId int) ([]models.WatchListMovie, error) {
+	GetWatchListMoviesQuery := `SELECT m.id, m.title, m.poster_url, wl.set_at, wl.watch_status
 	FROM watch_list AS wl 
 	JOIN movies AS m ON m.id = wl.movie_id
 	WHERE wl.user_id = $1
-	ORDER BY wl.movie_id;`
+	ORDER BY wl.set_at DESC;`
 
 	rows, err := WlR.DB.DB.QueryContext(ctx, GetWatchListMoviesQuery, UserId)
 
 	if err != nil {
-		return []models.Movie{}, err
+		return []models.WatchListMovie{}, err
 	}
 
 	defer rows.Close()
-	movies := make([]models.Movie, 0)
+	movies := make([]models.WatchListMovie, 0)
 
 	for rows.Next() {
-		var movie models.Movie
-		err := rows.Scan(&movie.Id, &movie.Title, &movie.StoryLine, &movie.ProducerName, &movie.Category, &movie.ReleaseDate, &movie.PosterUrl, &movie.PosterPublicID, &movie.Status, &movie.ImdbRating, &movie.InternalRating)
+		var movie models.WatchListMovie
+		err := rows.Scan(&movie.MovieID, &movie.Title, &movie.PosterURL, &movie.SetAt, &movie.WatchStatus)
 		if err != nil {
-			return []models.Movie{}, err
+			return []models.WatchListMovie{}, err
 		}
 
 		movies = append(movies, movie)
 	}
 
 	if err := rows.Err(); err != nil {
-		return []models.Movie{}, err
+		return []models.WatchListMovie{}, err
 	}
 
 	return movies, nil

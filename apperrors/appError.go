@@ -151,4 +151,9 @@ var (
 		Code:    http.StatusBadRequest,
 		Message: "invalid birthdate data",
 	}
+
+	ErrInvalidWLStatus = &AppError{
+		Code:    http.StatusBadRequest,
+		Message: "invalid watch list movie status",
+	}
 )

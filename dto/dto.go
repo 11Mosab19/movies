@@ -93,6 +93,14 @@ type MovieSummaryResponse struct {
 	InternalRating float64  `json:"internal_rating"`
 }
 
+type WatchListMovieResponse struct {
+	MovieID   int       `json:"movie_id"`
+	Title     string    `json:"title"`
+	PosterURL string    `json:"poster_url"`
+	SetAt     time.Time `json:"set_at"`
+	Status    string    `json:"status"`
+}
+
 type UserRes struct {
 	Id       int    `json:"id"`
 	Role     string `json:"role"`

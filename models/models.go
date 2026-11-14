@@ -20,6 +20,14 @@ type Movie struct {
 	PosterPublicID string
 }
 
+type WatchListMovie struct {
+	MovieID     int
+	Title       string
+	PosterURL   string
+	SetAt       time.Time
+	WatchStatus string
+}
+
 type User struct {
 	Id             int
 	FullName       string
