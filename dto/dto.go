@@ -129,3 +129,40 @@ type UpdateActorReq struct {
 	HomeLand    *string `json:"home_land"`
 	DateOfBirth *string `json:"date_of_birth"`
 }
+
+type CreateReviewRequest struct {
+	Review string   `json:"review" binding:"required"`
+	Rating *float64 `json:"rating" binding:"required,gte=0,lte=10"`
+}
+
+type UpdateReviewRequest struct {
+	Review *string  `json:"review"`
+	Rating *float64 `json:"rating" binding:"omitempty,gte=0,lte=10"`
+}
+
+type UserReviewResponse struct {
+	Review     string  `json:"review"`
+	Rating     float64 `json:"rating"`
+	MovieTitle string  `json:"movie_title"`
+	PosterURL  string  `json:"poster_url"`
+}
+
+type MovieReviewResponse struct {
+	UserName string  `json:"user_name"`
+	Rating   float64 `json:"rating"`
+	Review   string  `json:"review"`
+}
+
+type DetailedReviewResponse struct {
+	ReviewID   int       `json:"review_id"`
+	MovieID    int       `json:"movie_id"`
+	UserID     int       `json:"user_id"`
+	UserName   string    `json:"user_name"`
+	MovieTitle string    `json:"movie_title"`
+	IMDBRating *float64  `json:"imdb_rating"`
+	UserRating float64   `json:"user_rating"`
+	PosterURL  string    `json:"poster_url"`
+	Review     string    `json:"review"`
+	CreatedAt  time.Time `json:"created_at"`
+	UpdatedAt  time.Time `json:"updated_at"`
+}

@@ -30,7 +30,7 @@ func (RP *ReviewRepo) AddReview(ctx context.Context, Review models.Review) error
 	return nil
 }
 
-func (RP *ReviewRepo) GetUserReviews(ctx context.Context, UserID int) ([]models.ReviewWithMovie, error) {
+func (RP *ReviewRepo) GetUserReviews(ctx context.Context, UserID int) ([]models.ReviewsForUserWithMovie, error) {
 	GetReviewsQuery := `SELECT r.review,r.rating,m.title,m.poster_url 
 	FROM movies AS m
 	JOIN reviews AS r ON r.movie_id = m.id
@@ -43,10 +43,10 @@ func (RP *ReviewRepo) GetUserReviews(ctx context.Context, UserID int) ([]models.
 	}
 	defer rows.Close()
 
-	UserReviews := make([]models.ReviewWithMovie, 0)
+	UserReviews := make([]models.ReviewsForUserWithMovie, 0)
 
 	for rows.Next() {
-		var UR models.ReviewWithMovie
+		var UR models.ReviewsForUserWithMovie
 
 		err := rows.Scan(&UR.Review, &UR.Rating, &UR.Title, &UR.PosterUrl)
 		if err != nil {
@@ -63,23 +63,67 @@ func (RP *ReviewRepo) GetUserReviews(ctx context.Context, UserID int) ([]models.
 	return UserReviews, nil
 }
 
-func (RP *ReviewRepo) GetReviewWithId(ctx context.Context, ReviewId int) (models.ReviewWithMovie, error) {
-	GetReviewQuery := `SELECT r.review,r.rating,m.title,m.poster_url 
-	FROM movies AS m
-	JOIN reviews AS r ON r.movie_id = m.id
-	WHERE r.id=$1;`
+func (RP *ReviewRepo) GetReviewWithId(ctx context.Context, reviewID int) (models.DetailedReview, error) {
+	getReviewQuery := `SELECT r.id, r.movie_id, r.user_id, u.full_name, m.title,
+		m.imdb_rating, r.rating, m.poster_url, r.review, r.created_at, r.updated_at
+	FROM reviews AS r
+	JOIN users AS u ON u.id = r.user_id
+	JOIN movies AS m ON m.id = r.movie_id
+	WHERE r.id = $1;`
 
-	var UR models.ReviewWithMovie
+	var review models.DetailedReview
 
-	err := RP.DB.DB.QueryRowContext(ctx, GetReviewQuery, ReviewId).Scan(&UR.Review, &UR.Rating, &UR.Title, &UR.PosterUrl)
+	err := RP.DB.DB.QueryRowContext(ctx, getReviewQuery, reviewID).Scan(
+		&review.ReviewID,
+		&review.MovieID,
+		&review.UserID,
+		&review.UserName,
+		&review.MovieTitle,
+		&review.IMDBRating,
+		&review.UserRating,
+		&review.PosterURL,
+		&review.Review,
+		&review.CreatedAt,
+		&review.UpdatedAt,
+	)
 
 	if errors.Is(err, sql.ErrNoRows) {
-		return models.ReviewWithMovie{}, apperrors.ErrReviewNotFound
+		return models.DetailedReview{}, apperrors.ErrReviewNotFound
 	}
 	if err != nil {
-		return models.ReviewWithMovie{}, err
+		return models.DetailedReview{}, err
 	}
-	return UR, nil
+	return review, nil
+}
+
+func (RP *ReviewRepo) GetMovieReviews(ctx context.Context, movieID int) ([]models.ReviewForMovie, error) {
+	getMovieReviewsQuery := `SELECT u.full_name, r.rating, r.review
+	FROM reviews AS r
+	JOIN users AS u ON u.id = r.user_id
+	WHERE r.movie_id = $1
+	ORDER BY r.created_at DESC;`
+
+	rows, err := RP.DB.DB.QueryContext(ctx, getMovieReviewsQuery, movieID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	reviews := make([]models.ReviewForMovie, 0)
+	for rows.Next() {
+		var review models.ReviewForMovie
+		if err := rows.Scan(&review.UserName, &review.Rating, &review.Review); err != nil {
+			return nil, err
+		}
+
+		reviews = append(reviews, review)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return reviews, nil
 }
 
 func (RP *ReviewRepo) UpdateReview(ctx context.Context, UserId int, ReviewId int, ReviewData models.UpdateReviewData) error {

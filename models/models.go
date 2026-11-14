@@ -71,11 +71,30 @@ type Claims struct {
 	jwt.RegisteredClaims
 }
 
-type ReviewWithMovie struct {
+type ReviewsForUserWithMovie struct {
 	Review    string
 	Rating    float64
 	Title     string
 	PosterUrl string
+}
+
+type ReviewForMovie struct {
+	UserName string
+	Rating   float64
+	Review   string
+}
+type DetailedReview struct {
+	ReviewID   int
+	MovieID    int
+	UserID     int
+	UserName   string
+	MovieTitle string
+	IMDBRating *float64
+	UserRating float64
+	PosterURL  string
+	Review     string
+	CreatedAt  time.Time
+	UpdatedAt  time.Time
 }
 
 type MovieWithActors struct {
