@@ -26,7 +26,8 @@ func GetConfig() string {
 
 var MySecretKey = []byte(GetConfig())
 
-func (AS *AuthService) GenerateAccessToken(ctx context.Context, UserData models.User) (dto.Token, error) {
+// register
+func (AS *AuthService) GenerateAccessToken(ctx context.Context, UserData dto.UserRes) (dto.Token, error) {
 	claims := models.Claims{
 		UserId: UserData.Id,
 		Role:   UserData.Role,
@@ -45,7 +46,6 @@ func (AS *AuthService) GenerateAccessToken(ctx context.Context, UserData models.
 }
 
 func (AS *AuthService) VerifyToken(TokenString string) (*models.Claims, error) {
-
 	VerifiedClaims := &models.Claims{}
 	Returned, err := jwt.ParseWithClaims(TokenString, VerifiedClaims, func(t *jwt.Token) (any, error) {
 		if t.Method.Alg() != jwt.SigningMethodHS256.Alg() {
@@ -62,7 +62,7 @@ func (AS *AuthService) VerifyToken(TokenString string) (*models.Claims, error) {
 	return VerifiedClaims, nil
 }
 
-func (AS *AuthService) CreateSession(ctx context.Context, user models.User) (dto.Token, string, error) {
+func (AS *AuthService) CreateSession(ctx context.Context, user dto.UserRes) (dto.Token, string, error) {
 	accessToken, err := AS.GenerateAccessToken(ctx, user)
 	if err != nil {
 		return dto.Token{}, "", err
@@ -99,7 +99,13 @@ func (AS *AuthService) Refresh(ctx context.Context, refreshToken string) (dto.To
 		return dto.Token{}, "", err
 	}
 
-	accessToken, err := AS.GenerateAccessToken(ctx, user)
+	User := dto.UserRes{
+		Id:       user.Id,
+		Role:     user.Role,
+		FullName: user.FullName,
+	}
+
+	accessToken, err := AS.GenerateAccessToken(ctx, User)
 	if err != nil {
 		return dto.Token{}, "", err
 	}

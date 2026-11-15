@@ -184,3 +184,15 @@ type DetailedReviewResponse struct {
 type DeleteUserReq struct {
 	Password string `json:"password" binding:"required"`
 }
+
+type LoginResponse struct {
+	AccessToken  string `json:"access_token"`
+	RefreshToken string `json:"refresh_token"`
+	TokenType    string `json:"token_type"`
+}
+
+type RefreshTokenRequest struct {
+	RefreshToken string `json:"refresh_token" binding:"required"`
+}
+
+type LogoutRequest = RefreshTokenRequest
