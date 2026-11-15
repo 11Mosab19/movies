@@ -107,6 +107,20 @@ type UserRes struct {
 	FullName string `json:"full_name"`
 }
 
+type UserProfileResponse struct {
+	FullName     string              `json:"full_name"`
+	Reviews      []UserProfileReview `json:"reviews"`
+	TotalReviews int                 `json:"total_reviews"`
+}
+
+type UserProfileReview struct {
+	ID        int     `json:"id"`
+	Rating    float64 `json:"rating"`
+	Review    string  `json:"review"`
+	MovieURL  string  `json:"movie_url"`
+	MovieName string  `json:"movie_name"`
+}
+
 type UpdateMovieReq struct {
 	Title        *string  `json:"title"`
 	StoryLine    *string  `json:"story_line"`
@@ -165,4 +179,8 @@ type DetailedReviewResponse struct {
 	Review     string    `json:"review"`
 	CreatedAt  time.Time `json:"created_at"`
 	UpdatedAt  time.Time `json:"updated_at"`
+}
+
+type DeleteUserReq struct {
+	Password string `json:"password" binding:"required"`
 }

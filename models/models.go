@@ -36,6 +36,20 @@ type User struct {
 	Role           string
 }
 
+type UserProfile struct {
+	FullName     string
+	TotalReviews int
+	Reviews      []UserProfileReview
+}
+
+type UserProfileReview struct {
+	ID        int
+	Rating    float64
+	Review    string
+	MovieURL  string
+	MovieName string
+}
+
 type Review struct {
 	Id      int
 	UserID  int

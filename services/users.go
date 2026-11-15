@@ -68,11 +68,11 @@ func (US *UserService) RegisterUser(ctx context.Context, registerData dto.Regist
 
 }
 
-func (US *UserService) UpdateUserData(ctx context.Context, UpdateUserData dto.UpdateUserRequest, UserId int) (dto.UserRes, error) {
+func (US *UserService) UpdateUserData(ctx context.Context, UpdateUserData dto.UpdateUserRequest, UserId int) error {
 
 	User, err := US.UP.GetUserById(ctx, UserId)
 	if err != nil {
-		return dto.UserRes{}, err
+		return err
 	}
 
 	var UpdateData models.UpdateUserData
@@ -83,34 +83,72 @@ func (US *UserService) UpdateUserData(ctx context.Context, UpdateUserData dto.Up
 	if UpdateUserData.NewPassword != "" {
 
 		if UpdateUserData.OldPassword == "" {
-			return dto.UserRes{}, apperrors.ErrBadRequestData
+			return apperrors.ErrBadRequestData
 		}
 
 		err := bcrypt.CompareHashAndPassword([]byte(User.HashedPassword), []byte(UpdateUserData.OldPassword))
 
 		if err != nil {
-			return dto.UserRes{}, apperrors.ErrWrongUserPassword
+			return apperrors.ErrWrongUserPassword
 		}
 
 		HashedPassword, err := bcrypt.GenerateFromPassword([]byte(UpdateUserData.NewPassword), bcrypt.DefaultCost)
 
 		if err != nil {
-			return dto.UserRes{}, apperrors.ErrHashing
+			return apperrors.ErrHashing
 		}
 
 		UpdateData.NewHashedPassword = string(HashedPassword)
 	}
 
-	UpdatedUser, err := US.UP.UpdateUser(ctx, UserId, UpdateData)
+	err = US.UP.UpdateUser(ctx, UserId, UpdateData)
 	if err != nil {
-		return dto.UserRes{}, err
+		return err
+	}
+	return nil
+}
+
+func (US *UserService) GetUserProfile(ctx context.Context, userID int) (dto.UserProfileResponse, error) {
+	profile, err := US.UP.GetUserProfile(ctx, userID)
+	if err != nil {
+		return dto.UserProfileResponse{}, err
 	}
 
-	var ResUser = dto.UserRes{
-		Id:       UpdatedUser.Id,
-		FullName: UpdatedUser.FullName,
-		Role:     UpdatedUser.Role,
+	response := dto.UserProfileResponse{
+		FullName:     profile.FullName,
+		Reviews:      make([]dto.UserProfileReview, 0, len(profile.Reviews)),
+		TotalReviews: profile.TotalReviews,
+	}
+	for _, review := range profile.Reviews {
+		response.Reviews = append(response.Reviews, dto.UserProfileReview{
+			ID:        review.ID,
+			Rating:    review.Rating,
+			Review:    review.Review,
+			MovieURL:  review.MovieURL,
+			MovieName: review.MovieName,
+		})
 	}
 
-	return ResUser, nil
+	return response, nil
+}
+
+func (US *UserService) VerifyPassword(ctx context.Context, userID int, password string) error {
+	user, err := US.UP.GetUserById(ctx, userID)
+	if err != nil {
+		return err
+	}
+
+	if err := bcrypt.CompareHashAndPassword([]byte(user.HashedPassword), []byte(password)); err != nil {
+		return apperrors.ErrWrongUserPassword
+	}
+
+	return nil
+}
+
+func (US *UserService) DeleteUser(ctx context.Context, userID int, request dto.DeleteUserReq) error {
+	if err := US.VerifyPassword(ctx, userID, request.Password); err != nil {
+		return err
+	}
+
+	return US.UP.DeleteUser(ctx, userID)
 }

@@ -34,7 +34,7 @@ func (UR *UserRepo) AddUser(ctx context.Context, User models.User) (models.User,
 	return UserData, nil
 }
 
-func (UP *UserRepo) UpdateUser(ctx context.Context, id int, UserData models.UpdateUserData) (models.User, error) {
+func (UP *UserRepo) UpdateUser(ctx context.Context, id int, UserData models.UpdateUserData) error {
 	var QueryBuilder strings.Builder
 
 	QueryBuilder.WriteString("UPDATE users SET ")
@@ -61,42 +61,39 @@ func (UP *UserRepo) UpdateUser(ctx context.Context, id int, UserData models.Upda
 	}
 
 	if len(Args) == 0 {
-		return models.User{}, apperrors.ErrEmptyUpdate
+		return apperrors.ErrEmptyUpdate
 	}
 
 	Query := strings.TrimSuffix(QueryBuilder.String(), ", ")
 
 	Query += fmt.Sprintf(
-		" WHERE id = $%d RETURNING id, full_name, email, hashed_password, role;",
+		" WHERE id = $%d;",
 		ArgID,
 	)
+
 	Args = append(Args, id)
 
-	var user models.User
-
-	err := UP.DB.DB.QueryRowContext(ctx, Query, Args...).Scan(
-		&user.Id,
-		&user.FullName,
-		&user.Email,
-		&user.HashedPassword,
-		&user.Role,
-	)
-
-	if errors.Is(err, sql.ErrNoRows) {
-		return models.User{}, apperrors.ErrUserNotFound
-	}
-
+	result, err := UP.DB.DB.ExecContext(ctx, Query, Args...)
 	if err != nil {
 		var pgErr *pgconn.PgError
 
 		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
-			return models.User{}, apperrors.ErrEmailIsUsed
+			return apperrors.ErrEmailIsUsed
 		}
 
-		return models.User{}, err
+		return err
 	}
 
-	return user, nil
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if rowsAffected == 0 {
+		return apperrors.ErrUserNotFound
+	}
+
+	return nil
 }
 
 func (UR *UserRepo) GetUserByEmail(ctx context.Context, UserEmail string) (models.User, error) {
@@ -130,4 +127,75 @@ func (UR *UserRepo) GetUserById(ctx context.Context, UserId int) (models.User, e
 	UserData.Id = UserId
 
 	return UserData, nil
+}
+
+func (UR *UserRepo) GetUserProfile(ctx context.Context, userID int) (models.UserProfile, error) {
+	query := `SELECT u.full_name,
+		COUNT(r.id) OVER () AS total_reviews,
+		r.id,
+		COALESCE(r.rating, 0),
+		COALESCE(r.review, ''),
+		COALESCE(m.poster_url, ''),
+		COALESCE(m.title, '')
+	FROM users AS u
+	LEFT JOIN reviews AS r ON r.user_id = u.id
+	LEFT JOIN movies AS m ON m.id = r.movie_id
+	WHERE u.id = $1
+	ORDER BY r.created_at DESC NULLS LAST, r.id DESC NULLS LAST;`
+
+	rows, err := UR.DB.DB.QueryContext(ctx, query, userID)
+	if err != nil {
+		return models.UserProfile{}, err
+	}
+	defer rows.Close()
+
+	profile := models.UserProfile{Reviews: make([]models.UserProfileReview, 0)}
+	found := false
+	for rows.Next() {
+		found = true
+		var reviewID sql.NullInt64
+		var review models.UserProfileReview
+		if err := rows.Scan(
+			&profile.FullName,
+			&profile.TotalReviews,
+			&reviewID,
+			&review.Rating,
+			&review.Review,
+			&review.MovieURL,
+			&review.MovieName,
+		); err != nil {
+			return models.UserProfile{}, err
+		}
+
+		if reviewID.Valid {
+			review.ID = int(reviewID.Int64)
+			profile.Reviews = append(profile.Reviews, review)
+		}
+	}
+
+	if err := rows.Err(); err != nil {
+		return models.UserProfile{}, err
+	}
+	if !found {
+		return models.UserProfile{}, apperrors.ErrUserNotFound
+	}
+
+	return profile, nil
+}
+
+func (UR *UserRepo) DeleteUser(ctx context.Context, userID int) error {
+	result, err := UR.DB.DB.ExecContext(ctx, `DELETE FROM users WHERE id = $1;`, userID)
+	if err != nil {
+		return err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rowsAffected == 0 {
+		return apperrors.ErrUserNotFound
+	}
+
+	return nil
 }
