@@ -26,7 +26,7 @@ func (MS *MovieService) AddMovie(ctx context.Context, MovieData dto.MovieReq, im
 		return apperrors.ErrInvalidCategoryInput
 	}
 
-	if *MovieData.ImdbRating < 0 || *MovieData.ImdbRating > 10 {
+	if MovieData.ImdbRating != nil && (*MovieData.ImdbRating < 0 || *MovieData.ImdbRating > 10) {
 		return apperrors.ErrInvalidRatingInput
 	}
 
@@ -95,7 +95,7 @@ func (MS *MovieService) GetMovieById(ctx context.Context, movieId int) (dto.Movi
 
 }
 
-func (MS *MovieService) GetMOvieByTitle(ctx context.Context, Title string) ([]dto.MovieSummaryResponse, error) {
+func (MS *MovieService) GetMovieByTitle(ctx context.Context, Title string) ([]dto.MovieSummaryResponse, error) {
 	MoviesData, err := MS.MR.GetMovieByTitle(ctx, Title)
 	if err != nil {
 		return []dto.MovieSummaryResponse{}, err

@@ -57,10 +57,6 @@ func UpdateMovieReqToMap(req dto.UpdateMovieReq) map[string]interface{} {
 		fields["release_date"] = *req.ReleaseDate
 	}
 
-	if req.PosterURL != nil {
-		fields["poster_url"] = *req.PosterURL
-	}
-
 	if req.Status != nil {
 		fields["status"] = *req.Status
 	}

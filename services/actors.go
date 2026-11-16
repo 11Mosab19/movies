@@ -101,6 +101,10 @@ func (AS *ActorService) GetActorByName(ctx context.Context, actorName string) ([
 }
 
 func (AS *ActorService) UpdateActor(ctx context.Context, actorId int, ActorUpdateData dto.UpdateActorReq, image io.Reader) error {
+	if ActorUpdateData.DateOfBirth != nil && ActorUpdateData.DateOfBirth.After(time.Now()) {
+		return apperrors.ErrInvalidBirthDate
+	}
+
 	fields := util.UpdateActorReqToMap(ActorUpdateData)
 	if image == nil {
 		return AS.AR.UpdateActor(ctx, actorId, fields)
