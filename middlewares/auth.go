@@ -12,7 +12,7 @@ type AuthMiddleware struct {
 	AS *services.AuthService
 }
 
-func (AM *AuthMiddleware) AuthMiddleWare() gin.HandlerFunc {
+func (AM *AuthMiddleware) LoginRequired() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		header := c.GetHeader("Authorization")
 		if header == "" {

@@ -1,6 +1,9 @@
 package dto
 
-import "time"
+import (
+	"mime/multipart"
+	"time"
+)
 
 type RegisterUserReq struct {
 	Email                string `json:"email" binding:"required,email"`
@@ -41,9 +44,10 @@ type MovieReq struct {
 }
 
 type AddActorReq struct {
-	Name        string    `json:"name" binding:"required"`
-	HomeLand    string    `json:"home_land" binding:"required"`
-	DateOfBirth time.Time `json:"date_of_birth" binding:"required"`
+	Name        string                `form:"name" binding:"required"`
+	HomeLand    string                `form:"home_land" binding:"required"`
+	DateOfBirth time.Time             `form:"date_of_birth" time_format:"2006-01-02" binding:"required"`
+	Image       *multipart.FileHeader `form:"image" binding:"required"`
 }
 
 type MovieDetailsResponse struct {
@@ -139,9 +143,10 @@ type ActorSummaryResponse struct {
 }
 
 type UpdateActorReq struct {
-	Name        *string `json:"name"`
-	HomeLand    *string `json:"home_land"`
-	DateOfBirth *string `json:"date_of_birth"`
+	Name        *string               `form:"name" binding:"required"`
+	HomeLand    *string               `form:"home_land" binding:"required"`
+	DateOfBirth *time.Time            `form:"date_of_birth" time_format:"2006-01-02" binding:"required"`
+	Image       *multipart.FileHeader `form:"image" binding:"required"`
 }
 
 type CreateReviewRequest struct {

@@ -136,5 +136,19 @@ func (AS *ActorService) UpdateActor(ctx context.Context, actorId int, ActorUpdat
 }
 
 func (AS *ActorService) DeleteActor(ctx context.Context, actorID int) error {
+	actor, err := AS.AR.GetActorById(ctx, actorID)
+	if err != nil {
+		return err
+	}
+
+	if actor.Actor.ImagePublicID != "" {
+		if AS.CS == nil {
+			return errors.New("Cloudinary service is not initialized")
+		}
+		if err := AS.CS.DeleteImage(ctx, actor.Actor.ImagePublicID); err != nil {
+			return fmt.Errorf("delete actor image: %w", err)
+		}
+	}
+
 	return AS.AR.DeleteActor(ctx, actorID)
 }

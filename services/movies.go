@@ -257,6 +257,20 @@ func (MS *MovieService) UpdateMovie(ctx context.Context, movieId int, MovieUpdat
 }
 
 func (MS *MovieService) DeleteMovie(ctx context.Context, movieId int) error {
+	movie, err := MS.MR.GetMovieById(ctx, movieId)
+	if err != nil {
+		return err
+	}
+
+	if movie.Movie.PosterPublicID != "" {
+		if MS.CS == nil {
+			return errors.New("Cloudinary service is not initialized")
+		}
+		if err := MS.CS.DeleteImage(ctx, movie.Movie.PosterPublicID); err != nil {
+			return fmt.Errorf("delete movie poster: %w", err)
+		}
+	}
+
 	return MS.MR.DeleteMovie(ctx, movieId)
 }
 
