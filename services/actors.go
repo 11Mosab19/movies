@@ -125,7 +125,7 @@ func (AS *ActorService) UpdateActor(ctx context.Context, actorId int, ActorUpdat
 	}
 	oldPublicID := existingActor.Actor.ImagePublicID
 
-	newImage, err := AS.CS.UploadImage(ctx, image, "actors")
+	newImage, err := AS.CS.UploadImage(ctx, image, "Actors")
 	if err != nil {
 		return err
 	}

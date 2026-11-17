@@ -242,7 +242,7 @@ func (MS *MovieService) UpdateMovie(ctx context.Context, movieId int, MovieUpdat
 	}
 	oldPublicID := existingMovie.Movie.PosterPublicID
 
-	newImage, err := MS.CS.UploadImage(ctx, image, "movies")
+	newImage, err := MS.CS.UploadImage(ctx, image, "Movies")
 	if err != nil {
 		return err
 	}
