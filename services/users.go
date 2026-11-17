@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"errors"
+	"fmt"
 	"movies/apperrors"
 	"movies/dto"
 	"movies/models"
@@ -45,7 +46,7 @@ func (US *UserService) RegisterUser(ctx context.Context, registerData dto.Regist
 	var user models.User
 	HashedPassword, err := bcrypt.GenerateFromPassword([]byte(registerData.Password), bcrypt.DefaultCost)
 	if err != nil {
-		return dto.UserRes{}, apperrors.ErrHashing
+		return dto.UserRes{}, fmt.Errorf("hash registration password: %w", err)
 	}
 	registerData.Password = string(HashedPassword)
 
@@ -95,7 +96,7 @@ func (US *UserService) UpdateUserData(ctx context.Context, UpdateUserData dto.Up
 		HashedPassword, err := bcrypt.GenerateFromPassword([]byte(UpdateUserData.NewPassword), bcrypt.DefaultCost)
 
 		if err != nil {
-			return apperrors.ErrHashing
+			return fmt.Errorf("hash updated password: %w", err)
 		}
 
 		UpdateData.NewHashedPassword = string(HashedPassword)

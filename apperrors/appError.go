@@ -12,6 +12,11 @@ func (ap *AppError) Error() string {
 }
 
 var (
+	ErrInternalServerError = &AppError{
+		Code:    http.StatusInternalServerError,
+		Message: "internal server error",
+	}
+
 	ErrUserNotFound = &AppError{
 		Code:    http.StatusNotFound,
 		Message: "user not found",
@@ -32,10 +37,7 @@ var (
 		Message: "invalid email or password",
 	}
 
-	ErrHashing = &AppError{
-		Code:    http.StatusInternalServerError,
-		Message: "error while hashing",
-	}
+	ErrHashing = ErrInternalServerError
 
 	ErrInvalidStatusInput = &AppError{
 		Code:    http.StatusBadRequest,
@@ -112,15 +114,9 @@ var (
 		Message: "actor not found",
 	}
 
-	ErrGenerateRefreshToken = &AppError{
-		Code:    http.StatusInternalServerError,
-		Message: "error while generating refresh token",
-	}
+	ErrGenerateRefreshToken = ErrInternalServerError
 
-	ErrGenerateAccessToken = &AppError{
-		Code:    http.StatusInternalServerError,
-		Message: "error while generating access token",
-	}
+	ErrGenerateAccessToken = ErrInternalServerError
 
 	ErrInvalidRefreshToken = &AppError{
 		Code:    http.StatusUnauthorized,

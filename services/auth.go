@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"errors"
+	"fmt"
 	"movies/apperrors"
 	"movies/dto"
 	"movies/models"
@@ -24,8 +25,6 @@ func GetConfig() string {
 	return SecretKey
 }
 
-var MySecretKey = []byte(GetConfig())
-
 // register
 func (AS *AuthService) GenerateAccessToken(ctx context.Context, UserData dto.UserRes) (dto.Token, error) {
 	claims := models.Claims{
@@ -40,18 +39,19 @@ func (AS *AuthService) GenerateAccessToken(ctx context.Context, UserData dto.Use
 	MySecretKey := []byte(GetConfig())
 	tokenString, err := token.SignedString(MySecretKey)
 	if err != nil {
-		return dto.Token{}, apperrors.ErrGenerateAccessToken
+		return dto.Token{}, fmt.Errorf("sign access token: %w", err)
 	}
 	return dto.Token{Key: tokenString}, nil
 }
 
 func (AS *AuthService) VerifyToken(TokenString string) (*models.Claims, error) {
 	VerifiedClaims := &models.Claims{}
+	secretKey := []byte(GetConfig())
 	Returned, err := jwt.ParseWithClaims(TokenString, VerifiedClaims, func(t *jwt.Token) (any, error) {
 		if t.Method.Alg() != jwt.SigningMethodHS256.Alg() {
 			return nil, apperrors.ErrUnsupportedAuthenticationMethod
 		}
-		return MySecretKey, nil
+		return secretKey, nil
 	})
 	if err != nil {
 		return &models.Claims{}, apperrors.ErrUnauthorized
