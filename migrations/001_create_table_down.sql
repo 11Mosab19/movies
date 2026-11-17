@@ -4,6 +4,9 @@ DROP INDEX IF EXISTS users_email_idx;
 DROP INDEX IF EXISTS movies_title_idx;
 DROP INDEX IF EXISTS movies_imdb_rating_idx;
 DROP INDEX IF EXISTS watch_list_user_id_idx;
+DROP INDEX IF EXISTS reviews_movie_id_idx;
+DROP INDEX IF EXISTS movies_category_idx;
+DROP INDEX IF EXISTS reviews_user_id_created_at_idx;
 
 
 DROP TABLE IF EXISTS refresh_tokens;

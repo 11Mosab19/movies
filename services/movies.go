@@ -29,6 +29,9 @@ func (MS *MovieService) AddMovie(ctx context.Context, MovieData dto.MovieReq, im
 	if MovieData.ImdbRating != nil && (*MovieData.ImdbRating < 0 || *MovieData.ImdbRating > 10) {
 		return apperrors.ErrInvalidRatingInput
 	}
+	if MS.CS == nil {
+		return errors.New("Cloudinary service is not initialized")
+	}
 
 	uploadedImage, err := MS.CS.UploadImage(ctx, image, "Movies")
 
@@ -54,11 +57,14 @@ func (MS *MovieService) AddMovie(ctx context.Context, MovieData dto.MovieReq, im
 	err = MS.MR.AddMovie(ctx, Movie)
 
 	if err != nil {
-		DeleteErr := MS.CS.DeleteImage(ctx, PosterPublicID)
-		if DeleteErr != nil {
-			return fmt.Errorf(
-				"create movie: %w; cleanup image: %v", err, DeleteErr)
+		deleteErr := MS.CS.DeleteImage(ctx, PosterPublicID)
+		if deleteErr != nil {
+			return errors.Join(
+				fmt.Errorf("create movie: %w", err),
+				fmt.Errorf("cleanup movie poster: %w", deleteErr),
+			)
 		}
+		return fmt.Errorf("create movie: %w", err)
 	}
 
 	return nil
@@ -262,20 +268,27 @@ func (MS *MovieService) DeleteMovie(ctx context.Context, movieId int) error {
 		return err
 	}
 
-	if movie.Movie.PosterPublicID != "" {
-		if MS.CS == nil {
-			return errors.New("Cloudinary service is not initialized")
-		}
-		if err := MS.CS.DeleteImage(ctx, movie.Movie.PosterPublicID); err != nil {
-			return fmt.Errorf("delete movie poster: %w", err)
-		}
+	posterPublicID := movie.Movie.PosterPublicID
+	if err := MS.MR.DeleteMovie(ctx, movieId); err != nil {
+		return err
 	}
 
-	return MS.MR.DeleteMovie(ctx, movieId)
+	if posterPublicID == "" {
+		return nil
+	}
+
+	if MS.CS == nil {
+		return fmt.Errorf("cleanup movie poster %q: %w", posterPublicID, errors.New("Cloudinary service is not initialized"))
+	}
+	if err := MS.CS.DeleteImage(ctx, posterPublicID); err != nil {
+		return fmt.Errorf("cleanup movie poster %q: %w", posterPublicID, err)
+	}
+
+	return nil
 }
 
 func (MS *MovieService) GetMoviesByIds(ctx context.Context, MoviesIds []int) ([]dto.MovieSummaryResponse, error) {
-	if len(MoviesIds) >= 0 {
+	if len(MoviesIds) == 0 {
 		return []dto.MovieSummaryResponse{}, nil
 	}
 

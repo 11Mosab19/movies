@@ -38,3 +38,29 @@ func (AM *AuthMiddleware) LoginRequired() gin.HandlerFunc {
 
 	}
 }
+
+func (AM *AuthMiddleware) RequireRole(requiredRole string) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		roleValue, exists := c.Get("Role")
+		if !exists {
+			c.Error(apperrors.ErrUnauthorized)
+			c.Abort()
+			return
+		}
+
+		role, ok := roleValue.(string)
+		if !ok || role == "" {
+			c.Error(apperrors.ErrUnauthorized)
+			c.Abort()
+			return
+		}
+
+		if role != requiredRole {
+			c.Error(apperrors.ErrForbidden)
+			c.Abort()
+			return
+		}
+
+		c.Next()
+	}
+}

@@ -47,6 +47,11 @@ var (
 		Message: "not allowed",
 	}
 
+	ErrForbidden = &AppError{
+		Code:    http.StatusForbidden,
+		Message: "forbidden",
+	}
+
 	ErrWrongConfirmationPassword = &AppError{
 		Code:    http.StatusBadRequest,
 		Message: "wrong confirmation password",

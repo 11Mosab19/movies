@@ -76,3 +76,6 @@ CREATE INDEX users_email_idx ON users(email);
 CREATE INDEX movies_title_idx ON movies(title);
 CREATE INDEX movies_imdb_rating_idx ON movies(imdb_rating);
 CREATE INDEX watch_list_user_id_idx ON watch_list(user_id);
+CREATE INDEX reviews_movie_id_idx ON reviews(movie_id);
+CREATE INDEX movies_category_idx ON movies(category);
+CREATE INDEX reviews_user_id_created_at_idx ON reviews(user_id, created_at DESC);

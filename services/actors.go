@@ -22,6 +22,9 @@ func (AS *ActorService) AddActor(ctx context.Context, ActorData dto.AddActorReq,
 	if ActorData.DateOfBirth.After(time.Now()) {
 		return apperrors.ErrInvalidBirthDate
 	}
+	if AS.CS == nil {
+		return errors.New("Cloudinary service is not initialized")
+	}
 	uploadedImage, err := AS.CS.UploadImage(ctx, image, "Actors")
 
 	if err != nil {
@@ -42,11 +45,14 @@ func (AS *ActorService) AddActor(ctx context.Context, ActorData dto.AddActorReq,
 	err = AS.AR.AddActor(ctx, Actor)
 
 	if err != nil {
-		DeleteErr := AS.CS.DeleteImage(ctx, imagePublicID)
-		if DeleteErr != nil {
-			return fmt.Errorf(
-				"create movie: %w; cleanup image: %v", err, DeleteErr)
+		deleteErr := AS.CS.DeleteImage(ctx, imagePublicID)
+		if deleteErr != nil {
+			return errors.Join(
+				fmt.Errorf("create actor: %w", err),
+				fmt.Errorf("cleanup actor photo: %w", deleteErr),
+			)
 		}
+		return fmt.Errorf("create actor: %w", err)
 	}
 
 	return nil
@@ -145,14 +151,21 @@ func (AS *ActorService) DeleteActor(ctx context.Context, actorID int) error {
 		return err
 	}
 
-	if actor.Actor.ImagePublicID != "" {
-		if AS.CS == nil {
-			return errors.New("Cloudinary service is not initialized")
-		}
-		if err := AS.CS.DeleteImage(ctx, actor.Actor.ImagePublicID); err != nil {
-			return fmt.Errorf("delete actor image: %w", err)
-		}
+	imagePublicID := actor.Actor.ImagePublicID
+	if err := AS.AR.DeleteActor(ctx, actorID); err != nil {
+		return err
 	}
 
-	return AS.AR.DeleteActor(ctx, actorID)
+	if imagePublicID == "" {
+		return nil
+	}
+
+	if AS.CS == nil {
+		return fmt.Errorf("cleanup actor image %q: %w", imagePublicID, errors.New("Cloudinary service is not initialized"))
+	}
+	if err := AS.CS.DeleteImage(ctx, imagePublicID); err != nil {
+		return fmt.Errorf("cleanup actor image %q: %w", imagePublicID, err)
+	}
+
+	return nil
 }
