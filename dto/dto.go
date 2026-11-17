@@ -172,6 +172,10 @@ type WatchListMovieResponse struct {
 	Status    string    `json:"status"`
 }
 
+type UpdateWLStatus struct {
+	Status string `json:"status" binding:"required"`
+}
+
 // Review DTOs are used by review endpoints and review responses.
 type CreateReviewRequest struct {
 	Review string   `json:"review" binding:"required"`
