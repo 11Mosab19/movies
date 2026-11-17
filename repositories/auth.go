@@ -14,7 +14,7 @@ type AuthRepo struct {
 }
 
 func (AR *AuthRepo) CreateRefreshToken(ctx context.Context, UserId int, HashedToken string) error {
-	ExpireAt := time.Now().AddDate(0, 1, 0)
+	ExpireAt := time.Now().AddDate(0, 3, 0)
 
 	AddRefreshQuery := `INSERT INTO refresh_tokens (user_id,token_hash,expires_at) VALUES ($1,$2,$3);`
 	_, err := AR.DB.DB.ExecContext(ctx, AddRefreshQuery, UserId, HashedToken, ExpireAt)
@@ -61,7 +61,7 @@ func (AR *AuthRepo) DeleteRefreshToken(ctx context.Context, HashedToken string) 
 }
 
 func (AR *AuthRepo) RotateRefreshToken(ctx context.Context, oldTokenHash string, newTokenHash string) error {
-	expiresAt := time.Now().AddDate(0, 1, 0)
+	expiresAt := time.Now().AddDate(0, 3, 0)
 	query := `UPDATE refresh_tokens
 		SET token_hash = $1, expires_at = $2, created_at = CURRENT_TIMESTAMP
 		WHERE token_hash = $3 AND expires_at > CURRENT_TIMESTAMP;`
